@@ -13,6 +13,7 @@ import atexit
 import statistics
 import requests
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 
 outheader = [
@@ -369,6 +370,20 @@ def plot_benchmark_results(outfile, folder, subfolder, errfile):
         plt.close()
 
 
+def create_mods_dir():
+    os.makedirs(os.path.join("factorio", "mods"), exist_ok=True)
+    mod_list_json_file = os.path.join("factorio", "mods", "mod-list.json")
+    if not os.path.exists(mod_list_json_file):
+        with open(mod_list_json_file, "x") as file:
+            file.write('{"mods":[{"name":"base","enabled":true}]}')
+    mod_settings_dat_file = os.path.join("factorio", "mods", "mod-settings.dat")
+    if not os.path.exists(mod_settings_dat_file):
+        # copy the file 'mod-settings.dat'
+        source = Path(os.path.join("fmm", "mod-settings.dat"))
+        destination = Path(mod_settings_dat_file)
+        destination.write_bytes(source.read_bytes())
+
+
 def init_parser():
     parser = argparse.ArgumentParser(
         description=(
@@ -484,6 +499,7 @@ if __name__ == "__main__":
     if args.install_maps:
         install_maps(args.install_maps)
 
+    create_mods_dir()
     if args.disable_mods:
         sync_mods(map="", disable_all=True)
 
