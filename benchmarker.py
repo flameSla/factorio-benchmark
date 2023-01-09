@@ -13,6 +13,8 @@ import atexit
 import statistics
 import requests
 import matplotlib.pyplot as plt
+import psutil
+import subprocess
 
 
 outheader = [
@@ -105,7 +107,9 @@ def install_factorio(
     os.remove("factorio.zip")
 
 
-def run_benchmark(map_, folder, ticks, runs, save=True, disable_mods=True, factorio_bin=None):
+def run_benchmark(
+    map_, folder, ticks, runs, save=True, disable_mods=True, factorio_bin=None, high_priority=None
+):
     """Run a benchmark on the given map with the specified number of ticks and
     runs."""
     if factorio_bin is None:
@@ -126,11 +130,25 @@ def run_benchmark(map_, folder, ticks, runs, save=True, disable_mods=True, facto
     )
     # print(command)
 
-    factorio_log = os.popen(command).read()
+    if high_priority is True:
+        priority = {
+            "linux": -20,
+            "win32": psutil.HIGH_PRIORITY_CLASS,
+            "cygwin": psutil.HIGH_PRIORITY_CLASS,
+        }[operatingsystem_codename]
+        process = psutil.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process.nice(priority)
+        factorio_log, err = map(
+            lambda a: a.decode("utf-8").replace("\r", ""), process.communicate()
+        )
+    else:
+        factorio_log = os.popen(command).read()
+        err = ""
 
     if "Performed" not in factorio_log:
         print("Benchmark failed")
         print(factorio_log)
+        print(err)
         return
     # print(factorio_log)
     ups = int(
@@ -155,6 +173,7 @@ def benchmark_folder(
     factorio_bin=None,
     folder=None,
     filenames=None,
+    high_priority=None,
 ):
     """Run benchmarks on all maps that match the given regular expression."""
     if folder is None:
@@ -172,6 +191,7 @@ def benchmark_folder(
         save=False,
         disable_mods=disable_mods,
         factorio_bin=factorio_bin,
+        high_priority=high_priority,
     )
     print("Finished warming up, starting the actual benchmark...")
 
@@ -193,6 +213,7 @@ def benchmark_folder(
                 save=True,
                 disable_mods=disable_mods,
                 factorio_bin=factorio_bin,
+                high_priority=high_priority,
             )
 
     print("==================")
@@ -442,7 +463,6 @@ def init_parser():
             "forget to update afterwards.",
         ),
     )
-
     parser.add_argument(
         "-m",
         "--install_maps",
@@ -456,6 +476,13 @@ def init_parser():
         "--disable_mods",
         action="store_true",
         help="disables the usage of mod syncronisations. runs all benchmarks without enabling any mods",
+    )
+    parser.add_argument(
+        "-hp",
+        "--high_priority",
+        action="store_true",
+        default=False,
+        help="Increases the priority for the 'factorio' process.",
     )
     return parser
 
@@ -494,6 +521,7 @@ if __name__ == "__main__":
         args.skipticks,
         args.consistency,
         map_regex=args.regex,
+        high_priority=args.high_priority,
     )
 
     # plot_benchmark_results()
