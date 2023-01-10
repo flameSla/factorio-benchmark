@@ -1,7 +1,6 @@
 import argparse
 import csv
 import glob
-import itertools
 import os
 import statistics
 import tarfile
@@ -266,8 +265,6 @@ def benchmark_folder(
         )
 
     print("==================")
-    print("creating graphs")
-
     old_subfolder_name = ""
     # print(
     #     sorted(
@@ -333,8 +330,6 @@ def benchmark_folder(
                     skipticks=skipticks,
                     name="consistency_" + file_name + "_" + consistency,
                 )
-
-    plot_benchmark_results(outfile, folder, old_subfolder_name, errfile)
 
     print("saving out.json")
     outfile_1 = dict()
@@ -432,30 +427,80 @@ def plot_ups_consistency(folder, subfolder, data, ticks, skipticks, name="defaul
     plt.close()
 
 
-def plot_benchmark_results(outfile, folder, subfolder, errfile):
+def plot_benchmark_results(folder, out_folder=None, cols=None):
     """Generate plots of benchmark results."""
-    # Create the output subfolder if it does not exist
-    subfolder_path = os.path.join(folder, "graphs", subfolder)
-    if not os.path.exists(subfolder_path):
-        os.makedirs(subfolder_path)
 
-    for col in itertools.chain(range(1, 12), range(23, 33)):
+    columns = (
+        "wholeUpdate",
+        "latencyUpdate",
+        "gameUpdate",
+        "circuitNetworkUpdate",
+        "transportLinesUpdate",
+        "fluidsUpdate",
+        "heatManagerUpdate",
+        "entityUpdate",
+        "particleUpdate",
+        "mapGenerator",
+        "mapGeneratorBasicTilesSupportCompute",
+        "mapGeneratorBasicTilesSupportApply",
+        "mapGeneratorCorrectedTilesPrepare",
+        "mapGeneratorCorrectedTilesCompute",
+        "mapGeneratorCorrectedTilesApply",
+        "mapGeneratorVariations",
+        "mapGeneratorEntitiesPrepare",
+        "mapGeneratorEntitiesCompute",
+        "mapGeneratorEntitiesApply",
+        "crcComputation",
+        "electricNetworkUpdate",
+        "logisticManagerUpdate",
+        "constructionManagerUpdate",
+        "pathFinder",
+        "trains",
+        "trainPathFinder",
+        "commander",
+        "chartRefresh",
+        "luaGarbageIncremental",
+        "chartUpdate",
+        "scriptUpdate",
+    )
+    if cols is not None:
+        if set(cols).issubset(columns):
+            columns = cols
+        else:
+            print("Error")
+            print("columns should be set from the list:")
+            print(columns)
+            print()
+            return
+
+    print("creating graphs")
+    # read out.json
+    with open(os.path.join(folder, "out.json"), "r") as f:
+        benchmark_result = json.loads(f.read())["benchmark_result"]
+
+    # Create the output subfolder if it does not exist
+    if out_folder is None:
+        out_folder = os.path.join(folder, "graphs")
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder)
+
+    maps = [a["name"] for a in benchmark_result]
+    for col in columns:
         fig, ax = plt.subplots()
-        maps = column(outfile, 0)[1:]
-        update = column(outfile, col)[1:]
+        update = [a[col] for a in benchmark_result]
         hbars = ax.barh(maps, update)
         ax.bar_label(
             hbars,
-            labels=[f"{x:.3f}" for x in column(outfile, col)[1:]],
+            labels=[f"{x:.3f}" for x in update],
             padding=3,
         )
         ax.margins(0.1, 0.05)
-        ax.set_title(outfile[0][col])
+        ax.set_title(col)
         ax.set_xlabel("Mean frametime [ms/frame]")
         ax.set_ylabel("Map name")
         plt.tight_layout()
         # Use os.path.join to build the file path for the output image
-        out_path = os.path.join(subfolder_path, f"{outfile[0][col]}.png")
+        out_path = os.path.join(out_folder, f"{col}.png")
         plt.savefig(out_path)
         plt.clf()
         plt.close()
@@ -569,6 +614,13 @@ def init_parser():
         default=False,
         help="Increases the priority for the 'factorio' process.",
     )
+    parser.add_argument(
+        "-p",
+        "--plot_results",
+        action="store_true",
+        default=False,
+        help="Plot benchmark results.",
+    )
     return parser
 
 
@@ -600,11 +652,11 @@ if __name__ == "__main__":
     if args.disable_mods:
         sync_mods(map="", disable_all=True)
 
-    saves = list()
-    saves.append(r"D:\Games\Factorio\saves\flame_Sla_10k.zip")
-    saves.append(r"saves\flame10k.zip")
-    saves.append(r"saves\factorio_maps\big_bases\flame10k.zip")
-    saves.append(r"saves\factorio_maps\big_bases\steve10krail(2x5k).zip")
+    # saves = list()
+    # saves.append(r"D:\Games\Factorio\saves\flame_Sla_10k.zip")
+    # saves.append(r"saves\flame10k.zip")
+    # saves.append(r"saves\factorio_maps\big_bases\flame10k.zip")
+    # saves.append(r"saves\factorio_maps\big_bases\steve10krail(2x5k).zip")
     folder = benchmark_folder(
         args.ticks,
         args.repetitions,
@@ -613,10 +665,8 @@ if __name__ == "__main__":
         args.consistency,
         map_regex=args.regex,
         high_priority=args.high_priority,
-        filenames=saves,
+        # filenames=saves,
     )
 
-    print()
-    print(folder)
-
-    # plot_benchmark_results()
+    if args.plot_results:
+        plot_benchmark_results(folder)
