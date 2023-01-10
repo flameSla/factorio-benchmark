@@ -536,7 +536,7 @@ def init_parser():
         "-r",
         "--regex",
         default="**",
-        help=(
+        help=str(
             "Regular expression to match map names to benchmark. "
             "The regex either needs to be escaped by quotes or every special "
             "character needs to be escaped. use ** if you want to match "
@@ -548,7 +548,7 @@ def init_parser():
         "--consistency",
         nargs="?",
         const="wholeUpdate",
-        help=(
+        help=str(
             "generates a update time consistency plot for the given metric. It "
             "has to be a metric accessible by --benchmark-verbose. the default "
             "value is 'wholeUpdate'. the first 10 ticks are skipped.(this can "
@@ -560,7 +560,7 @@ def init_parser():
         "--skipticks",
         type=int,
         default="20",
-        help=(
+        help=str(
             "the amount of ticks that are ignored at the beginning of very "
             "benchmark. helps to get more consistent data, especially for "
             "consistency plots. change this to '0' if you want to use all the "
@@ -579,7 +579,7 @@ def init_parser():
         "--repetitions",
         type=int,
         default="5",
-        help=(
+        help=str(
             "the number of times each map is repeated. default five. should be "
             "higher if `--consistency` is set.",
         ),
@@ -587,7 +587,7 @@ def init_parser():
     parser.add_argument(
         "--version_link",
         type=str,
-        help=(
+        help=str(
             "if you want to install a specific version of factorio. you have to "
             "provide the complete download link to the headless version. don't "
             "forget to update afterwards.",
