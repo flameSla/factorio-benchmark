@@ -54,6 +54,7 @@ outheader = [
     "scriptUpdate",
     "path",
     "md5",
+    "info",
 ]
 
 
@@ -313,6 +314,11 @@ def benchmark_folder(
 
     # processing benchmark results
     for file in sorted(files, key=lambda f: f["file_name"]):
+        with open(file["file"], "r") as f:
+            for line in f.readlines():
+                info = json.loads(line)
+                break
+
         with open(file["file"], "r", newline="") as cfile:
             cfilestr = list(csv.reader(cfile, dialect="excel"))
             inlist = []
@@ -340,6 +346,8 @@ def benchmark_folder(
             outrowerr.append(full_file_name)
             outrow.append(name_to_md5[full_file_name])
             outrowerr.append(name_to_md5[full_file_name])
+            outrow.append(info)
+            outrowerr.append(info)
 
             outfile.append(outrow)
             errfile.append(outrowerr)
