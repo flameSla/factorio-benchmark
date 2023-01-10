@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import psutil
 import subprocess
 from pathlib import Path
+import json
 
 
 outheader = [
@@ -177,8 +178,9 @@ def benchmark_folder(
     high_priority=None,
 ):
     """Run benchmarks on all maps that match the given regular expression."""
+    datetime_now = datetime.now()
     if folder is None:
-        folder = f"benchmark_on_{date.today()}_{datetime.now().strftime('%H_%M_%S')}"
+        folder = f"benchmark_on_{date.today()}_{datetime_now.strftime('%H_%M_%S')}"
     os.makedirs(folder)
     os.makedirs(os.path.join(folder, "saves"))
     os.makedirs(os.path.join(folder, "graphs"))
@@ -296,7 +298,35 @@ def benchmark_folder(
 
     plot_benchmark_results(outfile, folder, old_subfolder_name, errfile)
 
-    print("saving benchmark results")
+    print("saving out.json")
+    outfile_1 = dict()
+    dt = dict()
+    dt["year"] = datetime_now.year
+    dt["month"] = datetime_now.month
+    dt["day"] = datetime_now.day
+    dt["hour"] = datetime_now.hour
+    dt["minute"] = datetime_now.minute
+    dt["second"] = datetime_now.second
+    dt["microsecond"] = datetime_now.microsecond
+    outfile_1["datetime"] = dt
+    outfile_1["ticks"] = ticks
+    outfile_1["runs"] = runs
+    outfile_1["disable_mods"] = disable_mods
+    outfile_1["skipticks"] = skipticks
+    outfile_1["map_regex"] = map_regex
+    outfile_1["factorio_bin"] = factorio_bin
+    outfile_1["folder"] = folder
+    outfile_1["filenames"] = filenames
+    # list -> dict
+    outfile_1["benchmark_result"] = [
+        dict(zip(outheader, data_for_map)) for data_for_map in outfile[1:]
+    ]
+    out_path = os.path.join(folder, "out.json")
+    outfile_json = json.dumps(outfile_1, indent=4)
+    with open(out_path, "w+") as outjson_file:
+        outjson_file.write(outfile_json)
+
+    print("saving stdev.csv")
     errout_path = os.path.join(folder, "stdev.csv")
     with open(errout_path, "w+", newline="") as erroutfile:
         erroutfile.write(str(errfile))
