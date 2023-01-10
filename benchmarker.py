@@ -8,15 +8,14 @@ import tarfile
 from datetime import date, datetime
 from zipfile import ZipFile
 from sys import platform as operatingsystem_codename
-from datetime import datetime, date
 import atexit
-import statistics
 import requests
 import matplotlib.pyplot as plt
 import psutil
 import subprocess
 from pathlib import Path
 import json
+import hashlib
 
 
 outheader = [
@@ -53,6 +52,8 @@ outheader = [
     "luaGarbageIncremental",
     "chartUpdate",
     "scriptUpdate",
+    "path",
+    "md5",
 ]
 
 
@@ -110,7 +111,15 @@ def install_factorio(
 
 
 def run_benchmark(
-    map_, folder, ticks, runs, save=True, disable_mods=True, factorio_bin=None, high_priority=None
+    map_,
+    folder,
+    ticks,
+    runs,
+    md5,
+    save=True,
+    disable_mods=True,
+    factorio_bin=None,
+    high_priority=None,
 ):
     """Run a benchmark on the given map with the specified number of ticks and
     runs."""
@@ -151,18 +160,31 @@ def run_benchmark(
         print("Benchmark failed")
         print(factorio_log)
         print(err)
-        return
-    # print(factorio_log)
-    ups = int(
-        1000
-        * ticks
-        / float([line.split()[-2] for line in factorio_log.split("\n") if "Performed" in line][0])
-    )
-    print(f"Map benchmarked at {ups} UPS\r\n")
-    if save:
-        filtered_output = [line for line in factorio_log.split("\n") if "ed" in line or "t" in line]
-        with open(os.path.join(folder, "{}".format(os.path.splitext(map_)[0])), "x") as f:
-            f.write("\n".join(filtered_output))
+    else:
+        # print(factorio_log)
+        ups = int(
+            1000
+            * ticks
+            / float(
+                [line.split()[-2] for line in factorio_log.split("\n") if "Performed" in line][0]
+            )
+        )
+        print(f"Map benchmarked at {ups} UPS")
+        print()
+        if save:
+            filtered_output = [
+                line for line in factorio_log.split("\n") if "ed" in line or "t" in line
+            ]
+            with open(os.path.join(folder, "saves", md5 + ".log"), "x") as f:
+                f.write("\n".join(filtered_output))
+
+
+def get_md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 
 def benchmark_folder(
@@ -191,6 +213,7 @@ def benchmark_folder(
         folder,
         ticks=100,
         runs=1,
+        md5="",
         save=False,
         disable_mods=disable_mods,
         factorio_bin=factorio_bin,
@@ -204,25 +227,47 @@ def benchmark_folder(
     print("==================\r\n")
     if filenames is None:
         filenames = glob.glob(os.path.join("saves", map_regex), recursive=True)
+
+    # md5 calculation for files
+    print("maps:")
+    filenames = [f for f in filenames if os.path.isfile(f)]
     for filename in filenames:
-        if os.path.isfile(filename):
-            print(filename)
-            os.makedirs(os.path.join(folder, os.path.split(filename)[0]), exist_ok=True)
-            run_benchmark(
-                filename,
-                folder,
-                ticks=ticks,
-                runs=runs,
-                save=True,
-                disable_mods=disable_mods,
-                factorio_bin=factorio_bin,
-                high_priority=high_priority,
+        print(filename)
+    print()
+    md5_to_name = dict()
+    name_to_md5 = dict()
+    for filename in filenames:
+        md5 = get_md5(filename)
+        # print("{} - {}".format(md5, filename))
+        if md5 not in md5_to_name:
+            md5_to_name[md5] = filename
+            name_to_md5[filename] = md5
+        else:
+            print(
+                "'{}' - the file matches the file - '{}'\tthe benchmark will not be made".format(
+                    filename, md5_to_name[md5]
+                )
             )
+    filenames = list(name_to_md5.keys())
+    print()
+
+    for filename in filenames:
+        print(filename)
+        run_benchmark(
+            filename,
+            folder,
+            ticks=ticks,
+            runs=runs,
+            md5=name_to_md5[filename],
+            save=True,
+            disable_mods=disable_mods,
+            factorio_bin=factorio_bin,
+            high_priority=high_priority,
+        )
 
     print("==================")
     print("creating graphs")
-    outfile = [outheader]
-    errfile = [outheader[:]]
+
     old_subfolder_name = ""
     # print(
     #     sorted(
@@ -236,34 +281,21 @@ def benchmark_folder(
     #         )
     #     )
     # )
-    for file in sorted(
-        glob.glob(
-            os.path.join(folder, "saves", map_regex),
-            recursive=True,
-        )
-    ):
-        # check if file is actually a file or a folder
+    outfile = [outheader]
+    errfile = [outheader]
+    # get file names from hash
+    files = list()
+    for file in glob.glob(os.path.join(folder, "saves", "*.log")):
+        full_file_name = md5_to_name[os.path.basename(file).replace(".log", "")]
+        file_name = os.path.basename(full_file_name).split(".")[0]
+        files.append({"file_name": file_name, "file": file, "full_file_name": full_file_name})
 
-        if not os.path.isfile(file):
-            continue
-
-        # check if we are in a new folder and if so generate the old graphs.
-        file_name = os.path.split(file)[1]
-        subfolder_name = os.path.split(os.path.split(file)[0])[1]
-        if old_subfolder_name == "":
-            old_subfolder_name = subfolder_name
-        # print(subfolder_name)
-        if subfolder_name != old_subfolder_name:
-            plot_benchmark_results(outfile, folder, old_subfolder_name, errfile)
-            outfile = [outheader]
-            old_subfolder_name = subfolder_name
-
-        with open(file, "r", newline="") as cfile:
-
+    # processing benchmark results
+    for file in sorted(files, key=lambda f: f["file_name"]):
+        with open(file["file"], "r", newline="") as cfile:
             cfilestr = list(csv.reader(cfile, dialect="excel"))
             inlist = []
             errinlist = []
-
             for i in cfilestr[0 : len(cfilestr)]:
                 try:
                     if int(i[0][1:]) % ticks < skipticks:
@@ -276,12 +308,18 @@ def benchmark_folder(
                     pass
                     # print("can't convert to int")
 
+            full_file_name = file["full_file_name"]
+            file_name = file["file_name"]
             outrow = [file_name]
-
             outrowerr = [file_name + "_stdev"]
             for rowi in range(32):
                 outrow.append(statistics.mean(column(inlist, rowi)))
                 outrowerr.append(statistics.stdev(column(errinlist, rowi)))
+            outrow.append(full_file_name)
+            outrowerr.append(full_file_name)
+            outrow.append(name_to_md5[full_file_name])
+            outrowerr.append(name_to_md5[full_file_name])
+
             outfile.append(outrow)
             errfile.append(outrowerr)
 
@@ -333,6 +371,8 @@ def benchmark_folder(
 
     print("\r\nthe benchmark is finished")
     print("==================")
+
+    return folder
 
 
 def plot_ups_consistency(folder, subfolder, data, ticks, skipticks, name="default"):
@@ -560,7 +600,12 @@ if __name__ == "__main__":
     if args.disable_mods:
         sync_mods(map="", disable_all=True)
 
-    benchmark_folder(
+    saves = list()
+    saves.append(r"D:\Games\Factorio\saves\flame_Sla_10k.zip")
+    saves.append(r"saves\flame10k.zip")
+    saves.append(r"saves\factorio_maps\big_bases\flame10k.zip")
+    saves.append(r"saves\factorio_maps\big_bases\steve10krail(2x5k).zip")
+    folder = benchmark_folder(
         args.ticks,
         args.repetitions,
         args.disable_mods,
@@ -568,6 +613,10 @@ if __name__ == "__main__":
         args.consistency,
         map_regex=args.regex,
         high_priority=args.high_priority,
+        filenames=saves,
     )
+
+    print()
+    print(folder)
 
     # plot_benchmark_results()
