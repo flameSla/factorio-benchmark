@@ -15,6 +15,7 @@ import subprocess
 from pathlib import Path
 import json
 import hashlib
+import re
 
 
 outheader = [
@@ -129,7 +130,22 @@ def run_benchmark(
         sync_mods(map_)
 
     print("Running benchmark...")
-    os.dup(1)
+    # Get Version
+    command = (
+        f"{factorio_bin} " f'--benchmark "{map_}" ' "--benchmark-ticks 1 " "--benchmark-runs 1 "
+    )
+    factorio_log_version = os.popen(command).read()
+    result = re.search(r"; Factorio (\d+\.\d+\.\d+)", factorio_log_version)
+    if result:
+        version = str(
+            result[1]
+            + {
+                "linux": " Linux",
+                "win32": " Windows",
+                "cygwin": " Cygwin",
+            }[operatingsystem_codename]
+        )
+
     command = (
         f"{factorio_bin} "
         f'--benchmark "{map_}" '
@@ -138,8 +154,6 @@ def run_benchmark(
         "--benchmark-verbose all "
         "--benchmark-sanitize"
     )
-    # print(command)
-
     if high_priority is True:
         priority = {
             "linux": -20,
@@ -160,20 +174,30 @@ def run_benchmark(
         print(factorio_log)
         print(err)
     else:
-        # print(factorio_log)
-        ups = int(
-            1000
-            * ticks
-            / float(
-                [line.split()[-2] for line in factorio_log.split("\n") if "Performed" in line][0]
-            )
-        )
-        print(f"Map benchmarked at {ups} UPS")
-        print()
         if save:
-            filtered_output = [
-                line for line in factorio_log.split("\n") if "ed" in line or "t" in line
+            # print(factorio_log)
+            print(version)
+            avgs = [
+                float(line.split()[-2]) for line in factorio_log.split("\n") if "Performed" in line
             ]
+            avg = statistics.mean(avgs)
+            print("Map benchmarked at:")
+            print("avg = {:.3f} ms {}".format(avg, avgs))
+            ups = 1000 * ticks / avg
+            print("{:.3f} UPS".format(ups))
+            print()
+            # with open(os.path.join(folder, "saves", md5 + ".all"), "x") as f:
+            #    print(factorio_log_version, file=f)
+            out = dict()
+            out["version"] = version
+            out["avg"] = avg
+            out["ups"] = ups
+            out["avgs"] = avgs
+            filtered_output = list()
+            filtered_output.append(str(json.dumps(out)))
+            filtered_output.extend(
+                [line for line in factorio_log.split("\n") if "ed" in line or "t" in line]
+            )
             with open(os.path.join(folder, "saves", md5 + ".log"), "x") as f:
                 f.write("\n".join(filtered_output))
 
