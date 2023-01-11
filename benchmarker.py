@@ -122,6 +122,7 @@ def run_benchmark(
     disable_mods=True,
     factorio_bin=None,
     high_priority=None,
+    cpu=None,
 ):
     """Run a benchmark on the given map with the specified number of ticks and
     runs."""
@@ -157,6 +158,8 @@ def run_benchmark(
         "--benchmark-sanitize"
     )
     if high_priority is True:
+        if cpu is None:
+            cpu = 0
         priority = {
             "linux": -20,
             "win32": psutil.HIGH_PRIORITY_CLASS,
@@ -164,6 +167,8 @@ def run_benchmark(
         }[operatingsystem_codename]
         process = psutil.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.nice(priority)
+        if cpu != 0:
+            process.cpu_affinity(list(range(0, cpu)))
         factorio_log, err = map(
             lambda a: a.decode("utf-8").replace("\r", ""), process.communicate()
         )
@@ -195,6 +200,7 @@ def run_benchmark(
             out["avg"] = avg
             out["ups"] = ups
             out["avgs"] = avgs
+            out["cpu"] = cpu
             filtered_output = list()
             filtered_output.append(str(json.dumps(out)))
             filtered_output.extend(
@@ -223,6 +229,7 @@ def benchmark_folder(
     folder=None,
     filenames=None,
     high_priority=None,
+    cpu=None,
 ):
     """Run benchmarks on all maps that match the given regular expression."""
     datetime_now = datetime.now()
@@ -243,13 +250,15 @@ def benchmark_folder(
         disable_mods=disable_mods,
         factorio_bin=factorio_bin,
         high_priority=high_priority,
+        cpu=cpu,
     )
     print("Finished warming up, starting the actual benchmark...")
 
     print()
     print("==================")
     print("benchmark maps")
-    print("==================\r\n")
+    print("==================")
+    print()
     if filenames is None:
         filenames = glob.glob(os.path.join("saves", map_regex), recursive=True)
 
@@ -288,6 +297,7 @@ def benchmark_folder(
             disable_mods=disable_mods,
             factorio_bin=factorio_bin,
             high_priority=high_priority,
+            cpu=cpu,
         )
 
     print("==================")
@@ -397,7 +407,8 @@ def benchmark_folder(
     with open(errout_path, "w+", newline="") as erroutfile:
         erroutfile.write(str(errfile))
 
-    print("\r\nthe benchmark is finished")
+    print()
+    print("the benchmark is finished")
     print("==================")
 
     return folder
@@ -706,6 +717,7 @@ if __name__ == "__main__":
         map_regex=args.regex,
         high_priority=args.high_priority,
         # filenames=saves,
+        # cpu=2,
     )
 
     if args.plot_results:

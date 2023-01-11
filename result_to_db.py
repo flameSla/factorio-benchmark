@@ -152,7 +152,7 @@ def result_to_db(folder, db_name=None):
         data.append(br["info"]["avg"])
         data.append(br["info"]["ups"])
         data.append(br["info"]["version"])
-        data.append(0)  # "cpu"
+        data.append(br["info"]["cpu"])
         data.append(str(br["info"]["avgs"]))
         data.append(br["timestamp"])
         data.append(br["wholeUpdate"])
