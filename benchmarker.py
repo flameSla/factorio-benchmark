@@ -16,6 +16,7 @@ from pathlib import Path
 import json
 import hashlib
 import re
+import result_to_db
 
 
 outheader = [
@@ -653,6 +654,13 @@ def init_parser():
         default=False,
         help="Plot benchmark results.",
     )
+    parser.add_argument(
+        "-rtb",
+        "--results_to_db",
+        action="store_true",
+        default=False,
+        help=str("Save the benchmark result in the database. Database name 'benchmark_result.db3'"),
+    )
     return parser
 
 
@@ -702,3 +710,6 @@ if __name__ == "__main__":
 
     if args.plot_results:
         plot_benchmark_results(folder)
+
+    if args.results_to_db:
+        result_to_db.result_to_db(folder)

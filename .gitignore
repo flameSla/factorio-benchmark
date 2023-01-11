@@ -1,4 +1,9 @@
+*.db3
+*.exe
 *.cmd
+*.pyc
+*.lnk
+__pycache__
 files.csv
 cleanfile.csv
 file.out
