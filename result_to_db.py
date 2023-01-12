@@ -6,7 +6,7 @@ from datetime import datetime
 
 def create_db(db_name):
     if os.path.exists(db_name):
-        print("db exists")
+        # print("db exists")
         return
 
     db = sqlite3.connect(db_name)
@@ -133,7 +133,18 @@ def bd_append_benchmark_result(db_name, data):
     return new_id
 
 
-def result_to_db(folder, db_name=None):
+def description_list_to_str(d: list):
+    return "JSON:" + str(json.dumps(d))
+
+
+def description_str_to_list(s: str):
+    if s[:5] == "JSON:":
+        return json.loads(s[5:])
+    else:
+        return list()
+
+
+def result_to_db(folder, db_name=None, description=None):
     if db_name is None:
         db_name = "benchmark_result.db3"
 
@@ -194,7 +205,17 @@ def result_to_db(folder, db_name=None):
     data.append(benchmark_result["disable_mods"])
     data.append(benchmark_result["skipticks"])
     data.append(benchmark_result["map_regex"])
-    description = input("Enter a description for the test:")
+    if description is None:
+        # entering a multiline comment
+        print("Enter a description for the test. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+        description = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            description.append(line)
+        description = description_list_to_str(description)
     data.append(description)
     data.append(str(ids))
     con = sqlite3.connect(db_name)
