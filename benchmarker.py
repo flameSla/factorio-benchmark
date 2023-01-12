@@ -162,8 +162,8 @@ def run_benchmark(
             cpu = 0
         priority = {
             "linux": -20,
-            "win32": psutil.HIGH_PRIORITY_CLASS,
-            "cygwin": psutil.HIGH_PRIORITY_CLASS,
+            "win32": 128,  # psutil.HIGH_PRIORITY_CLASS AttributeError: module 'psutil' has no attribute 'HIGH_PRIORITY_CLASS'
+            "cygwin": 128,  # psutil.HIGH_PRIORITY_CLASS AttributeError: module 'psutil' has no attribute 'HIGH_PRIORITY_CLASS'
         }[operatingsystem_codename]
         process = psutil.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.nice(priority)
