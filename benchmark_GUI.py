@@ -8,6 +8,7 @@ import wx
 
 # begin wxGlade: dependencies
 import wx.adv
+
 # end wxGlade
 
 # begin wxGlade: extracode
@@ -71,12 +72,16 @@ class MainFrame(wx.Frame):
         self.spin_runs.SetMinSize((60, 23))
         sizer_3.Add(self.spin_runs, 0, 0, 0)
 
-        self.checkbox_disable_mods = wx.CheckBox(self.panel_1, wx.ID_ANY, "Disable mods", style=wx.ALIGN_RIGHT)
+        self.checkbox_disable_mods = wx.CheckBox(
+            self.panel_1, wx.ID_ANY, "Disable mods", style=wx.ALIGN_RIGHT
+        )
         self.checkbox_disable_mods.SetMinSize((100, -1))
         self.checkbox_disable_mods.SetValue(1)
         sizer_3.Add(self.checkbox_disable_mods, 0, 0, 0)
 
-        self.checkbox_delete_temp_folder = wx.CheckBox(self.panel_1, wx.ID_ANY, "Delete Temp folder", style=wx.ALIGN_RIGHT)
+        self.checkbox_delete_temp_folder = wx.CheckBox(
+            self.panel_1, wx.ID_ANY, "Delete Temp folder", style=wx.ALIGN_RIGHT
+        )
         self.checkbox_delete_temp_folder.SetMinSize((120, -1))
         self.checkbox_delete_temp_folder.SetValue(1)
         sizer_3.Add(self.checkbox_delete_temp_folder, 0, 0, 0)
@@ -97,7 +102,9 @@ class MainFrame(wx.Frame):
         self.spin_ticks.SetMinSize((60, 23))
         sizer_4.Add(self.spin_ticks, 0, 0, 0)
 
-        self.checkbox_high_priority = wx.CheckBox(self.panel_1, wx.ID_ANY, "High priority", style=wx.ALIGN_RIGHT)
+        self.checkbox_high_priority = wx.CheckBox(
+            self.panel_1, wx.ID_ANY, "High priority", style=wx.ALIGN_RIGHT
+        )
         self.checkbox_high_priority.SetMinSize((100, -1))
         self.checkbox_high_priority.SetValue(1)
         sizer_4.Add(self.checkbox_high_priority, 0, 0, 0)
@@ -161,10 +168,14 @@ class MainFrame(wx.Frame):
         label_3 = wx.StaticText(self.panel_3, wx.ID_ANY, "Description")
         sizer_5.Add(label_3, 0, 0, 0)
 
-        self.text_Description = wx.TextCtrl(self.panel_3, wx.ID_ANY, "<>", style=wx.TE_LEFT | wx.TE_MULTILINE)
+        self.text_Description = wx.TextCtrl(
+            self.panel_3, wx.ID_ANY, "<>", style=wx.TE_LEFT | wx.TE_MULTILINE
+        )
         sizer_5.Add(self.text_Description, 15, wx.EXPAND, 0)
 
-        self.text_ctrl_command_line = wx.TextCtrl(self.panel_3, wx.ID_ANY, "benchmarker.py", style=wx.TE_READONLY)
+        self.text_ctrl_command_line = wx.TextCtrl(
+            self.panel_3, wx.ID_ANY, "benchmarker.py", style=wx.TE_READONLY
+        )
         sizer_5.Add(self.text_ctrl_command_line, 0, 0, 0)
 
         self.Results = wx.Panel(self.Panel1, wx.ID_ANY)
@@ -180,7 +191,9 @@ class MainFrame(wx.Frame):
         self.button_tests_update = wx.Button(self.panel_4, wx.ID_ANY, "Update tests")
         sizer_12.Add(self.button_tests_update, 0, 0, 0)
 
-        self.list_ctrl_tests = wx.ListCtrl(self.panel_4, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
+        self.list_ctrl_tests = wx.ListCtrl(
+            self.panel_4, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES
+        )
         self.list_ctrl_tests.AppendColumn("A", format=wx.LIST_FORMAT_LEFT, width=-1)
         self.list_ctrl_tests.AppendColumn("B", format=wx.LIST_FORMAT_LEFT, width=-1)
         self.list_ctrl_tests.AppendColumn("C", format=wx.LIST_FORMAT_LEFT, width=-1)
@@ -222,10 +235,14 @@ class MainFrame(wx.Frame):
 
         sizer_13 = wx.BoxSizer(wx.VERTICAL)
 
-        self.button_update_benchmark_results = wx.Button(self.panel_5, wx.ID_ANY, "Update benchmark results")
+        self.button_update_benchmark_results = wx.Button(
+            self.panel_5, wx.ID_ANY, "Update benchmark results"
+        )
         sizer_13.Add(self.button_update_benchmark_results, 0, 0, 0)
 
-        self.list_ctrl_benchmark_results = wx.ListCtrl(self.panel_5, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
+        self.list_ctrl_benchmark_results = wx.ListCtrl(
+            self.panel_5, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES
+        )
         self.list_ctrl_benchmark_results.AppendColumn("A", format=wx.LIST_FORMAT_LEFT, width=-1)
         self.list_ctrl_benchmark_results.AppendColumn("B", format=wx.LIST_FORMAT_LEFT, width=-1)
         self.list_ctrl_benchmark_results.AppendColumn("C", format=wx.LIST_FORMAT_LEFT, width=-1)
@@ -285,8 +302,16 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.button_reset_maps_OnButton, self.button_reset_maps)
         self.Bind(wx.EVT_BUTTON, self.button_tests_update_OnButton, self.button_tests_update)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.list_ctrl_tests_SELECTED, self.list_ctrl_tests)
-        self.Bind(wx.EVT_BUTTON, self.button_update_benchmark_results_OnButton, self.button_update_benchmark_results)
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.list_ctrl_benchmark_results_SELECTED, self.list_ctrl_benchmark_results)
+        self.Bind(
+            wx.EVT_BUTTON,
+            self.button_update_benchmark_results_OnButton,
+            self.button_update_benchmark_results,
+        )
+        self.Bind(
+            wx.EVT_LIST_ITEM_SELECTED,
+            self.list_ctrl_benchmark_results_SELECTED,
+            self.list_ctrl_benchmark_results,
+        )
         # end wxGlade
 
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -294,7 +319,9 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def menu_ABOUT(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'menu_ABOUT' not implemented!")
+        AboutDialog = MyAboutDialog(self, wx.ID_ANY, "")
+        AboutDialog.ShowModal()
+        del AboutDialog
         event.Skip()
 
     def button_set_the_path_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -333,7 +360,9 @@ class MainFrame(wx.Frame):
         print("Event handler 'list_ctrl_benchmark_results_SELECTED' not implemented!")
         event.Skip()
 
+
 # end of class MainFrame
+
 
 class MyAboutDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
@@ -349,7 +378,12 @@ class MyAboutDialog(wx.Dialog):
 
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
-        self.hyperlink_1 = wx.adv.HyperlinkCtrl(self.panel_1, wx.ID_ANY, "source code (GitHub)", "https://github.com/flameSla/factorio-benchmark/tree/modified_version")
+        self.hyperlink_1 = wx.adv.HyperlinkCtrl(
+            self.panel_1,
+            wx.ID_ANY,
+            "source code (GitHub)",
+            "https://github.com/flameSla/factorio-benchmark/tree/modified_version",
+        )
         sizer_3.Add(self.hyperlink_1, 0, 0, 0)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "2023 (c) flameSla")
@@ -379,7 +413,9 @@ class MyAboutDialog(wx.Dialog):
         self.Centre()
         # end wxGlade
 
+
 # end of class MyAboutDialog
+
 
 class BenchmarkGUI(wx.App):
     def OnInit(self):
@@ -387,6 +423,7 @@ class BenchmarkGUI(wx.App):
         self.SetTopWindow(self.frame)
         self.frame.Show()
         return True
+
 
 # end of class BenchmarkGUI
 
