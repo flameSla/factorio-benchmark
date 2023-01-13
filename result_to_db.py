@@ -75,6 +75,28 @@ def create_db(db_name):
     "scriptUpdate" REAL NULL
     );
 
+    CREATE VIEW tests_ids AS
+    SELECT	tests.id as id_tests, tests.disable_mods,
+        tests.skipticks, tests.map_regex, tests.description, json_each.value as ids
+    FROM tests, json_each(tests.benchmark_result_id);
+
+    CREATE VIEW view_benchmark_result AS
+    select benchmark_result.id as id,time,path,runs,
+        ticks,avg,ups,version,cpu,avgs,timestamp,wholeUpdate,
+        latencyUpdate,gameUpdate,circuitNetworkUpdate,transportLinesUpdate,fluidsUpdate,
+        heatManagerUpdate,entityUpdate,particleUpdate,mapGenerator,mapGeneratorBasicTilesSupportCompute,
+        mapGeneratorBasicTilesSupportApply,mapGeneratorCorrectedTilesPrepare,mapGeneratorCorrectedTilesCompute,
+        mapGeneratorCorrectedTilesApply,mapGeneratorVariations,mapGeneratorEntitiesPrepare,
+        mapGeneratorEntitiesCompute,mapGeneratorEntitiesApply,crcComputation,electricNetworkUpdate,
+        logisticManagerUpdate,constructionManagerUpdate,pathFinder,trains,trainPathFinder,commander,
+        chartRefresh,luaGarbageIncremental,chartUpdate,scriptUpdate,md5
+    from benchmark_result
+    join maps on map=maps.id;
+
+    CREATE VIEW view_test AS
+    select * from view_benchmark_result
+    join tests_ids on view_benchmark_result.id=tests_ids.ids;
+
     """
     )
     db.commit()
