@@ -7,6 +7,7 @@
 import wx
 import sqlite3
 from datetime import datetime
+import json
 
 # begin wxGlade: dependencies
 import wx.adv
@@ -196,41 +197,7 @@ class MainFrame(wx.Frame):
         self.list_ctrl_tests = wx.ListCtrl(
             self.panel_4, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES
         )
-        self.list_ctrl_tests.AppendColumn("A", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("B", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("C", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("D", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("E", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("F", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("G", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("H", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("I", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("J", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("K", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("L", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("M", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("N", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("O", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("P", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("Q", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("R", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("S", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("T", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("U", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("V", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("W", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("X", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("Y", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("Z", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AA", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AB", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AC", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AD", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AE", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AF", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AG", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_tests.AppendColumn("AH", format=wx.LIST_FORMAT_LEFT, width=-1)
-        sizer_12.Add(self.list_ctrl_tests, 10, wx.EXPAND, 0)
+        sizer_12.Add(self.list_ctrl_tests, 1, wx.EXPAND, 0)
 
         self.panel_5 = wx.Panel(self.Results, wx.ID_ANY)
         sizer_11.Add(self.panel_5, 1, wx.EXPAND, 0)
@@ -287,10 +254,16 @@ class MainFrame(wx.Frame):
             self.list_ctrl_benchmark_results_COL_CLICK,
             self.list_ctrl_benchmark_results,
         )
+        self.Bind(
+            wx.EVT_LIST_COL_CLICK,
+            self.list_ctrl_tests_COL_CLICK,
+            self.list_ctrl_tests,
+        )
 
         self.column_widths = set()
 
         self.update_benchmark_results("")
+        self.update_tests_results("")
 
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
         self.Close(False)
@@ -322,8 +295,26 @@ class MainFrame(wx.Frame):
         print("Event handler 'button_reset_maps_OnButton' not implemented!")
         event.Skip()
 
+    def update_tests_results(self, column_on_which_we_are_sorting):
+        with sqlite3.connect("benchmark_result.db3") as db:
+            db.row_factory = sqlite3.Row
+            cur = db.cursor()
+            query = "select * from tests"
+            if column_on_which_we_are_sorting:
+                query += f" order by {column_on_which_we_are_sorting}"
+            else:
+                query += " order by id"
+            cur.execute(query)
+            self.set_data_to_list(self.list_ctrl_tests, cur)
+            db.commit()
+
     def button_tests_update_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_tests_update_OnButton' not implemented!")
+        self.update_tests_results("")
+        event.Skip()
+
+    def list_ctrl_tests_COL_CLICK(self, event):
+        col = event.GetColumn()
+        self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText())
         event.Skip()
 
     def list_ctrl_tests_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -337,6 +328,12 @@ class MainFrame(wx.Frame):
         match col:
             case float() as col:
                 return "{:.3f}".format(col)
+            case str() as col:
+                if col[:5] == "JSON:":
+                    # description
+                    return " ".join(line for line in json.loads(col[5:]))
+                else:
+                    return col
             case _:
                 return str(col)
 
@@ -344,7 +341,7 @@ class MainFrame(wx.Frame):
         for n, row in enumerate(cur, start=0):
             if list not in self.column_widths:
                 if n == 0:
-                    list.AppendColumn("", format=wx.LIST_FORMAT_CENTER, width=-1)
+                    list.AppendColumn("", format=wx.LIST_FORMAT_LEFT, width=-1)
                     for col in row.keys():
                         list.AppendColumn(col, format=wx.LIST_FORMAT_LEFT, width=-1)
                 item = wx.ListItem()
