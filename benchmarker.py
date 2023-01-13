@@ -185,12 +185,15 @@ def run_benchmark(
             # print(factorio_log)
             print(version)
             avgs = [
-                float(line.split()[-2]) for line in factorio_log.split("\n") if "Performed" in line
+                float(line.split()[-2]) / ticks
+                for line in factorio_log.split("\n")
+                if "Performed" in line
             ]
             avg = statistics.mean(avgs)
+            ups = 1000 / avg
+            avgs = [f"{i:.3f}" for i in avgs]
             print("Map benchmarked at:")
             print("avg = {:.3f} ms {}".format(avg, avgs))
-            ups = 1000 * ticks / avg
             print("{:.3f} UPS".format(ups))
             print()
             # with open(os.path.join(folder, "saves", md5 + ".all"), "x") as f:
