@@ -315,7 +315,7 @@ class MainFrame(wx.Frame):
         # end wxGlade
 
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'menu_EXIT' not implemented!")
+        self.Close(False)
         event.Skip()
 
     def menu_ABOUT(self, event):  # wxGlade: MainFrame.<event_handler>
