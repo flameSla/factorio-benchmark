@@ -6,6 +6,7 @@
 
 import wx
 import sqlite3
+from datetime import datetime
 
 # begin wxGlade: dependencies
 import wx.adv
@@ -281,6 +282,15 @@ class MainFrame(wx.Frame):
             self.list_ctrl_benchmark_results,
         )
         # end wxGlade
+        self.Bind(
+            wx.EVT_LIST_COL_CLICK,
+            self.list_ctrl_benchmark_results_COL_CLICK,
+            self.list_ctrl_benchmark_results,
+        )
+
+        self.column_widths = set()
+
+        self.update_benchmark_results("")
 
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
         self.Close(False)
@@ -320,40 +330,65 @@ class MainFrame(wx.Frame):
         print("Event handler 'list_ctrl_tests_SELECTED' not implemented!")
         event.Skip()
 
-    def button_update_benchmark_results_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_update_benchmark_results_OnButton' not implemented!")
+    def list_get_text_for_column(self, col_index, col):
+        if col_index == 2:
+            d = datetime.fromtimestamp(col)
+            return d.isoformat(" ", "milliseconds")
+        match col:
+            case float() as col:
+                return "{:.3f}".format(col)
+            case _:
+                return str(col)
 
-        self.list_ctrl_benchmark_results.ClearAll()
+    def set_data_to_list(self, list, cur):
+        for n, row in enumerate(cur, start=0):
+            if list not in self.column_widths:
+                if n == 0:
+                    list.AppendColumn("", format=wx.LIST_FORMAT_CENTER, width=-1)
+                    for col in row.keys():
+                        list.AppendColumn(col, format=wx.LIST_FORMAT_LEFT, width=-1)
+                item = wx.ListItem()
+                item.SetId(n)
+                item.SetText(str(n + 1))
+                list.InsertItem(item)
+
+            for col_index, col in enumerate(row, start=1):
+                list.SetItem(
+                    n,
+                    col_index,
+                    self.list_get_text_for_column(col_index, col),
+                )
+
+        if list not in self.column_widths:
+            for col in range(list.GetColumnCount()):
+                list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
+                wh = list.GetColumnWidth(col)
+                list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
+                wc = list.GetColumnWidth(col)
+                if wh > wc:
+                    list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
+                self.column_widths.add(list)
+
+    def update_benchmark_results(self, column_on_which_we_are_sorting):
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
-            query = "select * from view_benchmark_result order by id"
+            query = "select * from view_benchmark_result"
+            if column_on_which_we_are_sorting:
+                query += f" order by {column_on_which_we_are_sorting}"
+            else:
+                query += " order by id"
             cur.execute(query)
-            for n, row in enumerate(cur):
-                if n == 1:
-                    self.list_ctrl_benchmark_results.AppendColumn(
-                        "", format=wx.LIST_FORMAT_CENTER, width=-1
-                    )
-                    for col in row.keys()[1:]:
-                        self.list_ctrl_benchmark_results.AppendColumn(
-                            col, format=wx.LIST_FORMAT_CENTER, width=-1
-                        )
-
-                for col in row:
-                    print(col)
-
-                """
-                self.grid_1.AppendRows()
-                row = self.grid_1.GetNumberRows() - 1
-                self.grid_1.SetCellValue(row, 0, res[0])  # magnet
-                self.grid_1.SetCellValue(row, 1, res[1])  # size
-                self.grid_1.SetCellValue(row, 2, res[2])  # category
-                self.grid_1.SetCellValue(row, 3, res[3])  # forum
-                self.grid_1.SetCellValue(row, 4, res[4])  # title
-                # print(res)
-                """
+            self.set_data_to_list(self.list_ctrl_benchmark_results, cur)
             db.commit()
 
+    def button_update_benchmark_results_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+        self.update_benchmark_results("")
+        event.Skip()
+
+    def list_ctrl_benchmark_results_COL_CLICK(self, event):
+        col = event.GetColumn()
+        self.update_benchmark_results(self.list_ctrl_benchmark_results.GetColumn(col).GetText())
         event.Skip()
 
     def list_ctrl_benchmark_results_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
