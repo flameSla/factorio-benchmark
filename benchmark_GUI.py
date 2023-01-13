@@ -5,6 +5,7 @@
 #
 
 import wx
+import sqlite3
 
 # begin wxGlade: dependencies
 import wx.adv
@@ -243,40 +244,7 @@ class MainFrame(wx.Frame):
         self.list_ctrl_benchmark_results = wx.ListCtrl(
             self.panel_5, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES
         )
-        self.list_ctrl_benchmark_results.AppendColumn("A", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("B", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("C", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("D", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("E", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("F", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("G", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("H", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("I", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("J", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("K", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("L", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("M", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("N", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("O", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("P", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("Q", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("R", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("S", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("T", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("U", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("V", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("W", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("X", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("Y", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("Z", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AA", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AB", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AC", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AD", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AE", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AF", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AG", format=wx.LIST_FORMAT_LEFT, width=-1)
-        self.list_ctrl_benchmark_results.AppendColumn("AH", format=wx.LIST_FORMAT_LEFT, width=-1)
+        # self.list_ctrl_benchmark_results.AppendColumn("A", format=wx.LIST_FORMAT_LEFT, width=-1)
         sizer_13.Add(self.list_ctrl_benchmark_results, 10, wx.EXPAND, 0)
 
         self.panel_5.SetSizer(sizer_13)
@@ -354,6 +322,38 @@ class MainFrame(wx.Frame):
 
     def button_update_benchmark_results_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         print("Event handler 'button_update_benchmark_results_OnButton' not implemented!")
+
+        self.list_ctrl_benchmark_results.ClearAll()
+        with sqlite3.connect("benchmark_result.db3") as db:
+            db.row_factory = sqlite3.Row
+            cur = db.cursor()
+            query = "select * from view_benchmark_result order by id"
+            cur.execute(query)
+            for n, row in enumerate(cur):
+                if n == 1:
+                    self.list_ctrl_benchmark_results.AppendColumn(
+                        "", format=wx.LIST_FORMAT_CENTER, width=-1
+                    )
+                    for col in row.keys()[1:]:
+                        self.list_ctrl_benchmark_results.AppendColumn(
+                            col, format=wx.LIST_FORMAT_CENTER, width=-1
+                        )
+
+                for col in row:
+                    print(col)
+
+                """
+                self.grid_1.AppendRows()
+                row = self.grid_1.GetNumberRows() - 1
+                self.grid_1.SetCellValue(row, 0, res[0])  # magnet
+                self.grid_1.SetCellValue(row, 1, res[1])  # size
+                self.grid_1.SetCellValue(row, 2, res[2])  # category
+                self.grid_1.SetCellValue(row, 3, res[3])  # forum
+                self.grid_1.SetCellValue(row, 4, res[4])  # title
+                # print(res)
+                """
+            db.commit()
+
         event.Skip()
 
     def list_ctrl_benchmark_results_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
