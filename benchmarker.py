@@ -149,14 +149,14 @@ def run_benchmark(
             }[operatingsystem_codename]
         )
 
-    command = (
-        f"{factorio_bin} "
-        f'--benchmark "{map_}" '
-        f"--benchmark-ticks {ticks} "
-        f"--benchmark-runs {runs} "
-        "--benchmark-verbose all "
-        "--benchmark-sanitize"
-    )
+    # psutil.Popen on Linux it doesn't work well with str()
+    command = list()
+    command.append(str(factorio_bin))
+    command.extend(["--benchmark", str(map_)])
+    command.extend(["--benchmark-ticks", str(ticks)])
+    command.extend(["--benchmark-runs", str(runs)])
+    command.extend(["--benchmark-verbose", "all"])
+    command.append("--benchmark-sanitize")
     if high_priority is True:
         if cpu is None:
             cpu = 0
@@ -166,7 +166,7 @@ def run_benchmark(
             "cygwin": 128,  # psutil.HIGH_PRIORITY_CLASS AttributeError: module 'psutil' has no attribute 'HIGH_PRIORITY_CLASS'
         }[operatingsystem_codename]
         process = psutil.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.nice(priority)
+        print("nice = ", priority)
         if cpu != 0:
             process.cpu_affinity(list(range(0, cpu)))
         factorio_log, err = map(
@@ -656,7 +656,7 @@ def init_parser():
         "--high_priority",
         action="store_true",
         default=False,
-        help="Increases the priority for the 'factorio' process.",
+        help="Increases the priority for the 'factorio' process. On Linux requires 'sudo'",
     )
     parser.add_argument(
         "-p",
