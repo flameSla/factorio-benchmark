@@ -216,6 +216,15 @@ def get_md5(fname: str) -> str:
     return hash_md5.hexdigest()
 
 
+def get_list_of_files_with_md5(folder: str, md5_to_name: dict[str, str]) -> list[dict[str, str]]:
+    files: list[dict[str, str]] = list()
+    for file in glob.glob(os.path.join(folder, "saves", "*.log")):
+        full_file_name = md5_to_name[os.path.basename(file).replace(".log", "")]
+        file_name = os.path.basename(full_file_name).split(".")[0]
+        files.append({"file_name": file_name, "file": file, "full_file_name": full_file_name})
+    return files
+
+
 def benchmark_folder(
     ticks: int,
     runs: int,
@@ -298,16 +307,11 @@ def benchmark_folder(
         )
 
     print("==================")
-    outfile = [outheader]
+    outfile: list[list[Any]] = [outheader]
     # get file names from hash
-    files = list()
-    for file in glob.glob(os.path.join(folder, "saves", "*.log")):
-        full_file_name = md5_to_name[os.path.basename(file).replace(".log", "")]
-        file_name = os.path.basename(full_file_name).split(".")[0]
-        files.append({"file_name": file_name, "file": file, "full_file_name": full_file_name})
+    files = get_list_of_files_with_md5(folder, md5_to_name)
 
     # processing benchmark results
-    file: dict[str, str] = dict()
     for file in sorted(files, key=lambda f: f["file_name"]):
         with open(file["file"], "r") as f:
             for line in f.readlines():
@@ -316,20 +320,20 @@ def benchmark_folder(
 
         with open(file["file"], "r", newline="") as cfile:
             cfilestr = list(csv.reader(cfile, dialect="excel"))
-            inlist = []
+            inlist: list[list[float]] = list()
             for i in cfilestr[0 : len(cfilestr)]:
                 try:
                     if int(i[0][1:]) % ticks < skipticks:
                         # figure out how to actually skip these ticks.
                         continue
-                    inlist.append([t / 1000000 for t in list(map(int, i[1:-1]))])
+                    inlist.append([float(t / 1000000) for t in list(map(int, i[1:-1]))])
                 except Exception:  # noqa: PIE786
                     pass
                     # print("can't convert to int")
 
             full_file_name = file["full_file_name"]
             file_name = file["file_name"]
-            outrow = [file_name]
+            outrow: list[str | float] = [file_name]
             for rowi in range(32):
                 outrow.append(statistics.mean([a[rowi] for a in inlist]))
             outrow.append(full_file_name)
@@ -339,7 +343,7 @@ def benchmark_folder(
             outfile.append(outrow)
 
     print("saving out.json")
-    outfile_1 = dict()
+    outfile_1: dict[str, Any] = dict()
     dt = dict()
     dt["year"] = datetime_now.year
     dt["month"] = datetime_now.month
@@ -373,10 +377,12 @@ def benchmark_folder(
     return folder
 
 
-def plot_benchmark_results(folder, out_folder=None, cols=None):
+def plot_benchmark_results(
+    folder: str, out_folder: str | None = None, cols: tuple[str, ...] | None = None
+) -> None:
     """Generate plots of benchmark results."""
 
-    columns = (
+    columns: tuple[str, ...] = (
         "wholeUpdate",
         "latencyUpdate",
         "gameUpdate",
@@ -452,7 +458,7 @@ def plot_benchmark_results(folder, out_folder=None, cols=None):
         plt.close()
 
 
-def create_mods_dir():
+def create_mods_dir() -> None:
     os.makedirs(os.path.join("factorio", "mods"), exist_ok=True)
     mod_list_json_file = os.path.join("factorio", "mods", "mod-list.json")
     if not os.path.exists(mod_list_json_file):
@@ -466,7 +472,7 @@ def create_mods_dir():
         destination.write_bytes(source.read_bytes())
 
 
-def init_parser():
+def init_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Benchmark Factorio maps. " 'The default configuration is `-r "**" -s 20 -t 1000 -e 5'
@@ -599,15 +605,16 @@ if __name__ == "__main__":
     # saves.append(r"saves\factorio_maps\big_bases\flame10k.zip")
     # saves.append(r"saves\factorio_maps\big_bases\steve10krail(2x5k).zip")
     folder = benchmark_folder(
-        args.ticks,
-        args.repetitions,
-        args.disable_mods,
-        args.skipticks,
-        args.consistency,
+        ticks=args.ticks,
+        runs=args.repetitions,
+        disable_mods=args.disable_mods,
+        skipticks=args.skipticks,
         map_regex=args.regex,
+        factorio_bin=None,
+        folder=None,
+        filenames=None,
         high_priority=args.high_priority,
-        # filenames=saves,
-        # cpu=2,
+        cpu=None,
     )
 
     if args.plot_results:

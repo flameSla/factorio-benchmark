@@ -2,9 +2,10 @@ import sqlite3
 import os
 import json
 from datetime import datetime
+from typing import Any
 
 
-def create_db(db_name):
+def create_db(db_name: str) -> None:
     if os.path.exists(db_name):
         # print("db exists")
         return
@@ -103,7 +104,7 @@ def create_db(db_name):
     cur.close()
 
 
-def get_map_id(db_name, path, md5):
+def get_map_id(db_name: str, path: str, md5: str) -> Any:
     con = sqlite3.connect(db_name)
     while True:
         cur = con.cursor()
@@ -124,23 +125,23 @@ def get_map_id(db_name, path, md5):
     return id[0][0]
 
 
-def get_time(d):
+def get_time(d: dict[str, int]) -> float:
     return datetime(
         d["year"], d["month"], d["day"], d["hour"], d["minute"], d["second"], d["microsecond"]
     ).timestamp()
 
 
-def bd_append_benchmark_result(db_name, data):
+def bd_append_benchmark_result(db_name: str, data: list[Any]) -> int:
     con = sqlite3.connect(db_name)
     cur = con.cursor()
     res = cur.execute("SELECT max(id) FROM benchmark_result")
-    new_id = res.fetchall()
+    row = res.fetchall()
     con.commit()
     cur.close()
-    if new_id[0][0] is None:
+    if row[0][0] is None:
         new_id = 1
     else:
-        new_id = new_id[0][0] + 1
+        new_id = row[0][0] + 1
 
     data.insert(0, new_id)
     cur = con.cursor()
@@ -155,18 +156,18 @@ def bd_append_benchmark_result(db_name, data):
     return new_id
 
 
-def description_list_to_str(d: list):
+def description_list_to_str(d: list[str]) -> str:
     return "JSON:" + str(json.dumps(d))
 
 
-def description_str_to_list(s: str):
+def description_str_to_list(s: str) -> list[str]:
     if s[:5] == "JSON:":
-        return json.loads(s[5:])
+        return list(json.loads(s[5:]))
     else:
         return list()
 
 
-def result_to_db(folder, db_name=None, description=None):
+def result_to_db(folder: str, db_name: str | None = None, description: str | None = None) -> None:
     if db_name is None:
         db_name = "benchmark_result.db3"
 
@@ -177,7 +178,7 @@ def result_to_db(folder, db_name=None, description=None):
     create_db(db_name)
     ids = list()
     for br in benchmark_result["benchmark_result"]:
-        data = list()
+        data: list[Any] = list()
         data.append(get_time(benchmark_result["datetime"]))
         data.append(get_map_id(db_name, br["path"], br["md5"]))
         data.append(benchmark_result["runs"])
@@ -230,14 +231,14 @@ def result_to_db(folder, db_name=None, description=None):
     if description is None:
         # entering a multiline comment
         print("Enter a description for the test. Ctrl-D or Ctrl-Z ( windows ) to save it.")
-        description = []
+        new_description = []
         while True:
             try:
                 line = input()
             except EOFError:
                 break
-            description.append(line)
-        description = description_list_to_str(description)
+            new_description.append(line)
+        description = description_list_to_str(new_description)
     data.append(description)
     data.append(str(ids))
     con = sqlite3.connect(db_name)
