@@ -577,14 +577,6 @@ def init_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     atexit.register(exit_handler)
     args = init_parser().parse_args()
-    consistency_index: int = 0
-
-    if args.consistency is not None:
-        try:
-            consistency_index = outheader.index(args.consistency)
-        except ValueError as e:
-            print("the chosen consistency variable doesn't exist:", e)
-            exit(0)
 
     if args.update:
         if args.version_link:
