@@ -17,6 +17,7 @@ import json
 import hashlib
 import re
 import result_to_db
+from typing import Any
 
 
 outheader = [
@@ -101,6 +102,11 @@ def install_factorio(
     os.remove("factorio.zip")
 
 
+# for mypy
+def remove_character_from_string(s: str, char: str = "\r") -> str:
+    return s.replace(char, "")
+
+
 def run_benchmark(
     map_: str,
     folder: str,
@@ -123,7 +129,9 @@ def run_benchmark(
 
     print("Running benchmark...")
     # Get Version
-    factorio_log_version = os.popen(f'{factorio_bin} --benchmark "{map_}" --benchmark-ticks 1 --benchmark-runs 1').read()
+    factorio_log_version = os.popen(
+        f'{factorio_bin} --benchmark "{map_}" --benchmark-ticks 1 --benchmark-runs 1'
+    ).read()
     result = re.search(r"; Factorio (\d+\.\d+\.\d+)", factorio_log_version)
     if result:
         version = str(
@@ -156,12 +164,12 @@ def run_benchmark(
         process.nice(priority)
         if cpu != 0:
             process.cpu_affinity(list(range(0, cpu)))
-        factorio_log, err = map(
-            lambda a:  a.decode("utf-8").replace("\r", ""), process.communicate()
-        )
     else:
-        factorio_log = os.popen(command).read()
-        err = ""
+        process = psutil.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    factorio_log, err = map(
+        lambda a: remove_character_from_string(a.decode("utf-8"), "\r"), process.communicate()
+    )
 
     if "Performed" not in factorio_log:
         print("Benchmark failed")
@@ -178,18 +186,18 @@ def run_benchmark(
             ]
             avg = statistics.mean(avgs)
             ups = 1000 / avg
-            avgs = [f"{i:.3f}" for i in avgs]
+            avgs_str: list[str] = [f"{i:.3f}" for i in avgs]
             print("Map benchmarked at:")
-            print("avg = {:.3f} ms {}".format(avg, avgs))
+            print("avg = {:.3f} ms {}".format(avg, avgs_str))
             print("{:.3f} UPS".format(ups))
             print()
             # with open(os.path.join(folder, "saves", md5 + ".all"), "x") as f:
             #    print(factorio_log_version, file=f)
-            out = dict()
+            out: dict[str, Any] = dict()
             out["version"] = version
             out["avg"] = avg
             out["ups"] = ups
-            out["avgs"] = avgs
+            out["avgs"] = avgs_str
             out["cpu"] = cpu
             filtered_output = list()
             filtered_output.append(str(json.dumps(out)))
@@ -200,7 +208,7 @@ def run_benchmark(
                 f.write("\n".join(filtered_output))
 
 
-def get_md5(fname):
+def get_md5(fname: str) -> str:
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -209,17 +217,17 @@ def get_md5(fname):
 
 
 def benchmark_folder(
-    ticks,
-    runs,
-    disable_mods,
-    skipticks,
-    map_regex="*",
-    factorio_bin=None,
-    folder=None,
-    filenames=None,
-    high_priority=None,
-    cpu=None,
-):
+    ticks: int,
+    runs: int,
+    disable_mods: bool,
+    skipticks: int,
+    map_regex: str = "*",
+    factorio_bin: str | None = None,
+    folder: str | None = None,
+    filenames: list[str] | None = None,
+    high_priority: bool | None = None,
+    cpu: int | None = None,
+) -> str:
     """Run benchmarks on all maps that match the given regular expression."""
     datetime_now = datetime.now()
     if folder is None:
@@ -299,6 +307,7 @@ def benchmark_folder(
         files.append({"file_name": file_name, "file": file, "full_file_name": full_file_name})
 
     # processing benchmark results
+    file: dict[str, str] = dict()
     for file in sorted(files, key=lambda f: f["file_name"]):
         with open(file["file"], "r") as f:
             for line in f.readlines():
