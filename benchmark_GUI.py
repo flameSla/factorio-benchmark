@@ -495,7 +495,7 @@ class MyAboutDialog(wx.Dialog):
             self.panel_1,
             wx.ID_ANY,
             "source code (GitHub)",
-            "https://github.com/flameSla/factorio-benchmark/tree/modified_version",
+            "https://github.com/flameSla/factorio-benchmark/tree/benchmark_GUI",
         )
         sizer_3.Add(self.hyperlink_1, 0, 0, 0)
 
