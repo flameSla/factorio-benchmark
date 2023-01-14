@@ -313,6 +313,7 @@ def benchmark_folder(
 
     # processing benchmark results
     for file in sorted(files, key=lambda f: f["file_name"]):
+        # we read the 1st line with "info"
         with open(file["file"], "r") as f:
             for line in f.readlines():
                 info = json.loads(line)
