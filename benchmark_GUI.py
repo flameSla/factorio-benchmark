@@ -9,6 +9,7 @@ import sqlite3
 from datetime import datetime
 import json
 import os
+import glob
 
 # begin wxGlade: dependencies
 import wx.adv
@@ -166,8 +167,8 @@ class MainFrame(wx.Frame):
         label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Maps:")
         sizer_6.Add(label_4, 0, 0, 0)
 
-        self.text_ctrl_3 = wx.TextCtrl(self.panel_2, wx.ID_ANY, "<>", style=wx.TE_MULTILINE)
-        sizer_6.Add(self.text_ctrl_3, 10, wx.EXPAND, 0)
+        self.text_ctrl_maps = wx.TextCtrl(self.panel_2, wx.ID_ANY, "", style=wx.TE_MULTILINE)
+        sizer_6.Add(self.text_ctrl_maps, 10, wx.EXPAND, 0)
 
         self.panel_3 = wx.Panel(self.Tests, wx.ID_ANY)
         sizer_1.Add(self.panel_3, 20, wx.EXPAND, 0)
@@ -178,7 +179,7 @@ class MainFrame(wx.Frame):
         sizer_5.Add(label_3, 0, 0, 0)
 
         self.text_Description = wx.TextCtrl(
-            self.panel_3, wx.ID_ANY, "<>", style=wx.TE_LEFT | wx.TE_MULTILINE
+            self.panel_3, wx.ID_ANY, "", style=wx.TE_LEFT | wx.TE_MULTILINE
         )
         sizer_5.Add(self.text_Description, 15, wx.EXPAND, 0)
 
@@ -297,6 +298,9 @@ class MainFrame(wx.Frame):
                     cols[:-1]
                 )
 
+                self.text_regex.Clear()
+                self.text_regex.AppendText(settings["text_regex"])
+
     def get_list_settings(self, list):
         result = dict()
         for col in range(list.GetColumnCount())[1:]:
@@ -304,14 +308,16 @@ class MainFrame(wx.Frame):
         return result
 
     def save_settings(self):
-        if not os.path.exists(self.name_of_the_settings_file):
-            settings = dict()
-            settings["list_ctrl_tests"] = self.get_list_settings(self.list_ctrl_tests)
-            settings["list_ctrl_benchmark_results"] = self.get_list_settings(
-                self.list_ctrl_benchmark_results
-            )
-            with open(self.name_of_the_settings_file, "w+") as f:
-                f.write(json.dumps(settings, indent=4))
+        settings = dict()
+        settings["list_ctrl_tests"] = self.get_list_settings(self.list_ctrl_tests)
+        settings["list_ctrl_benchmark_results"] = self.get_list_settings(
+            self.list_ctrl_benchmark_results
+        )
+
+        settings["text_regex"] = self.text_regex.GetLineText(0)
+
+        with open(self.name_of_the_settings_file, "w") as f:
+            f.write(json.dumps(settings, indent=4))
 
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
         self.Close()
@@ -332,7 +338,11 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_regex_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_regex_OnButton' not implemented!")
+        self.text_ctrl_maps.Clear()
+        filenames = glob.glob(os.path.join("saves", self.text_regex.GetLineText(0)), recursive=True)
+        filenames = [f for f in filenames if os.path.isfile(f)]
+        for name in filenames:
+            self.text_ctrl_maps.AppendText(name+"\n")
         event.Skip()
 
     def button_add_map_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -340,7 +350,7 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_reset_maps_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_reset_maps_OnButton' not implemented!")
+        self.text_ctrl_maps.Clear()
         event.Skip()
 
     def update_tests_results(self, column_on_which_we_are_sorting):
