@@ -59,18 +59,7 @@ outheader = [
 ]
 
 
-def column(table, index):
-    """Return the column of the table with the given index."""
-    col = []
-    for row in table:
-        try:
-            col.append(row[index])
-        except Exception:  # noqa: PIE786
-            continue
-    return col
-
-
-def exit_handler():
+def exit_handler() -> None:
     print("Terminating grasfully!")
     sync_mods("", True)
     # I should also clean up potential other files
@@ -78,7 +67,7 @@ def exit_handler():
     # also factorio.zip and maps.zip can be left over in rare cases and fail the reinstall.
 
 
-def sync_mods(map: str, disable_all: bool = False):
+def sync_mods(map: str, disable_all: bool = False) -> None:
     fmm_name = {"linux": "fmm_linux", "win32": "fmm_win32.exe", "cygwin": "fmm_win32.exe"}[
         operatingsystem_codename
     ]
@@ -90,7 +79,7 @@ def sync_mods(map: str, disable_all: bool = False):
     print(os.popen(set_mod_command).read())
 
 
-def install_maps(link):
+def install_maps(link: str) -> None:
     """download maps from the walterpi server"""
     file = requests.get(link)
     with open("maps.zip", "xb") as mapsfile:
@@ -101,8 +90,8 @@ def install_maps(link):
 
 
 def install_factorio(
-    link="https://factorio.com/get-download/stable/headless/linux64",
-):
+    link: str = "https://factorio.com/get-download/stable/headless/linux64",
+) -> None:
     """Download and extract the latest version of Factorio."""
     file = requests.get(link)
     with open("factorio.zip", "xb") as zipfile:
@@ -113,17 +102,17 @@ def install_factorio(
 
 
 def run_benchmark(
-    map_,
-    folder,
-    ticks,
-    runs,
-    md5,
-    save=True,
-    disable_mods=True,
-    factorio_bin=None,
-    high_priority=None,
-    cpu=None,
-):
+    map_: str,
+    folder: str,
+    ticks: int,
+    runs: int,
+    md5: str,
+    save: bool = True,
+    disable_mods: bool = True,
+    factorio_bin: str | None = None,
+    high_priority: bool | None = None,
+    cpu: int | None = None,
+) -> None:
     """Run a benchmark on the given map with the specified number of ticks and
     runs."""
     if factorio_bin is None:
@@ -134,10 +123,7 @@ def run_benchmark(
 
     print("Running benchmark...")
     # Get Version
-    command = (
-        f"{factorio_bin} " f'--benchmark "{map_}" ' "--benchmark-ticks 1 " "--benchmark-runs 1 "
-    )
-    factorio_log_version = os.popen(command).read()
+    factorio_log_version = os.popen(f'{factorio_bin} --benchmark "{map_}" --benchmark-ticks 1 --benchmark-runs 1').read()
     result = re.search(r"; Factorio (\d+\.\d+\.\d+)", factorio_log_version)
     if result:
         version = str(
@@ -150,7 +136,7 @@ def run_benchmark(
         )
 
     # psutil.Popen on Linux it doesn't work well with str()
-    command = list()
+    command: list[str] = list()
     command.append(str(factorio_bin))
     command.extend(["--benchmark", str(map_)])
     command.extend(["--benchmark-ticks", str(ticks)])
@@ -171,7 +157,7 @@ def run_benchmark(
         if cpu != 0:
             process.cpu_affinity(list(range(0, cpu)))
         factorio_log, err = map(
-            lambda a: a.decode("utf-8").replace("\r", ""), process.communicate()
+            lambda a:  a.decode("utf-8").replace("\r", ""), process.communicate()
         )
     else:
         factorio_log = os.popen(command).read()
@@ -227,7 +213,6 @@ def benchmark_folder(
     runs,
     disable_mods,
     skipticks,
-    consistency,
     map_regex="*",
     factorio_bin=None,
     folder=None,
@@ -305,21 +290,7 @@ def benchmark_folder(
         )
 
     print("==================")
-    old_subfolder_name = ""
-    # print(
-    #     sorted(
-    #         glob.glob(
-    #             os.path.join(
-    #                 folder,
-    #                 "saves",
-    #                 map_regex,
-    #             ),
-    #             recursive=True,
-    #         )
-    #     )
-    # )
     outfile = [outheader]
-    errfile = [outheader]
     # get file names from hash
     files = list()
     for file in glob.glob(os.path.join(folder, "saves", "*.log")):
@@ -337,15 +308,12 @@ def benchmark_folder(
         with open(file["file"], "r", newline="") as cfile:
             cfilestr = list(csv.reader(cfile, dialect="excel"))
             inlist = []
-            errinlist = []
             for i in cfilestr[0 : len(cfilestr)]:
                 try:
                     if int(i[0][1:]) % ticks < skipticks:
                         # figure out how to actually skip these ticks.
                         continue
                     inlist.append([t / 1000000 for t in list(map(int, i[1:-1]))])
-                    if i[0] != "t0":
-                        errinlist.append(list(map(int, i[1:-1])))
                 except Exception:  # noqa: PIE786
                     pass
                     # print("can't convert to int")
@@ -353,30 +321,13 @@ def benchmark_folder(
             full_file_name = file["full_file_name"]
             file_name = file["file_name"]
             outrow = [file_name]
-            outrowerr = [file_name + "_stdev"]
             for rowi in range(32):
-                outrow.append(statistics.mean(column(inlist, rowi)))
-                outrowerr.append(statistics.stdev(column(errinlist, rowi)))
+                outrow.append(statistics.mean([a[rowi] for a in inlist]))
             outrow.append(full_file_name)
-            outrowerr.append(full_file_name)
             outrow.append(name_to_md5[full_file_name])
-            outrowerr.append(name_to_md5[full_file_name])
             outrow.append(info)
-            outrowerr.append(info)
 
             outfile.append(outrow)
-            errfile.append(outrowerr)
-
-            if consistency is not None:
-                # do the consistency plot
-                plot_ups_consistency(
-                    folder=folder,
-                    subfolder=old_subfolder_name,
-                    data=column(inlist, consistency_index - 1),
-                    ticks=ticks,
-                    skipticks=skipticks,
-                    name="consistency_" + file_name + "_" + consistency,
-                )
 
     print("saving out.json")
     outfile_1 = dict()
@@ -406,73 +357,11 @@ def benchmark_folder(
     with open(out_path, "w+") as outjson_file:
         outjson_file.write(outfile_json)
 
-    print("saving stdev.csv")
-    errout_path = os.path.join(folder, "stdev.csv")
-    with open(errout_path, "w+", newline="") as erroutfile:
-        erroutfile.write(str(errfile))
-
     print()
     print("the benchmark is finished")
     print("==================")
 
     return folder
-
-
-def plot_ups_consistency(folder, subfolder, data, ticks, skipticks, name="default"):
-    subfolder_path = os.path.join(folder, "graphs", subfolder)
-
-    if not os.path.exists(subfolder_path):
-        os.makedirs(subfolder_path)
-    darray = []
-    med = []
-    maxi = []
-    mini = []
-
-    t = list(range(skipticks, ticks))
-    for i in range(int(len(data) / (ticks - skipticks))):
-        darray.append(data[(ticks - skipticks) * i : (ticks - skipticks) * (i + 1)])
-    for i in range(len(darray[0])):
-        # first discard the highest value as that can frequently be an outlier.
-        c = sorted(column(darray, i))[:-1]
-        med.append(statistics.median(c))
-        maxi.append(max(c))
-        mini.append(min(c))
-
-    for i in range(int(len(data) / (ticks - skipticks))):
-        plt.plot(
-            t,
-            data[(ticks - skipticks) * i : (ticks - skipticks) * (i + 1)],
-            "k",
-            alpha=0.2,
-            linewidth=0.6,
-        )
-    plt.plot(t, med, "r", label="median", linewidth=0.6)
-    plt.title(label=name)
-    plt.xlabel(xlabel="tick")
-    plt.ylabel(ylabel="tick time [ms]")
-    plt.legend()
-    plt.tight_layout()
-    # Use os.path.join to build the file path for the output image
-    out_path = os.path.join(subfolder_path, f"{name}_all.png")
-    # plt.show()
-    plt.savefig(out_path, dpi=800)
-    plt.clf()
-    plt.close()
-
-    plt.plot(t, maxi, label="maximum", linewidth=0.3)
-    plt.plot(t, mini, label="minimum", linewidth=0.3)
-    plt.plot(t, med, "r", label="median", linewidth=0.6)
-    plt.title(label=name)
-    plt.xlabel(xlabel="tick")
-    plt.ylabel(ylabel="tick time [ms]")
-    plt.legend()
-    plt.tight_layout()
-    # Use os.path.join to build the file path for the output image
-    out_path = os.path.join(subfolder_path, f"{name}_min_max_med.png")
-    # plt.show()
-    plt.savefig(out_path, dpi=800)
-    plt.clf()
-    plt.close()
 
 
 def plot_benchmark_results(folder, out_folder=None, cols=None):
@@ -589,18 +478,6 @@ def init_parser():
             "The regex either needs to be escaped by quotes or every special "
             "character needs to be escaped. use ** if you want to match "
             "everything. * can only be used if a specific folder is specified.",
-        ),
-    )
-    parser.add_argument(
-        "-c",
-        "--consistency",
-        nargs="?",
-        const="wholeUpdate",
-        help=str(
-            "generates a update time consistency plot for the given metric. It "
-            "has to be a metric accessible by --benchmark-verbose. the default "
-            "value is 'wholeUpdate'. the first 10 ticks are skipped.(this can "
-            "be set by setting '--skipticks'.",
         ),
     )
     parser.add_argument(
