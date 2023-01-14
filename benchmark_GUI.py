@@ -8,6 +8,7 @@ import wx
 import sqlite3
 from datetime import datetime
 import json
+import os
 
 # begin wxGlade: dependencies
 import wx.adv
@@ -19,6 +20,11 @@ import wx.adv
 
 
 class MainFrame(wx.Frame):
+    def OnClose(self, event):
+        print("__del__")
+        self.save_settings()
+        self.Destroy()
+
     def __init__(self, *args, **kwds):
         # begin wxGlade: MainFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
@@ -259,14 +265,30 @@ class MainFrame(wx.Frame):
             self.list_ctrl_tests_COL_CLICK,
             self.list_ctrl_tests,
         )
+        self.Bind(
+            wx.EVT_CLOSE,
+            self.OnClose,
+            self,
+        )
 
         self.column_widths = set()
 
         self.update_benchmark_results("")
         self.update_tests_results("")
 
+        self.restore_settings()
+
+    def restore_settings(self):
+        pass
+
+    def save_settings(self):
+        if not os.path.exists("settings.json"):
+            settings = dict()
+            
+            pass    
+
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
-        self.Close(False)
+        self.Close()
         event.Skip()
 
     def menu_ABOUT(self, event):  # wxGlade: MainFrame.<event_handler>
