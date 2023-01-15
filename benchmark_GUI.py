@@ -128,8 +128,8 @@ class MainFrame(wx.Frame):
         label_5.SetMinSize((40, 16))
         sizer_8.Add(label_5, 0, 0, 0)
 
-        self.text_ctrl_5 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "0")
-        sizer_8.Add(self.text_ctrl_5, 3, wx.EXPAND, 0)
+        self.text_ctrl_cpus = wx.TextCtrl(self.panel_1, wx.ID_ANY, "0")
+        sizer_8.Add(self.text_ctrl_cpus, 3, wx.EXPAND, 0)
 
         sizer_8.Add((0, 0), 0, 0, 0)
 
@@ -300,6 +300,15 @@ class MainFrame(wx.Frame):
 
                 self.text_regex.Clear()
                 self.text_regex.AppendText(settings["text_regex"])
+                self.text_factorio_bin.Clear()
+                self.text_factorio_bin.AppendText(settings["text_factorio_bin"])
+                self.text_ctrl_cpus.Clear()
+                self.text_ctrl_cpus.AppendText(settings["text_ctrl_cpus"])
+                self.spin_runs.SetValue(int(settings["spin_runs"]))
+                self.spin_ticks.SetValue(int(settings["spin_ticks"]))
+                self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
+                self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
+                self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
 
     def get_list_settings(self, list):
         result = dict()
@@ -315,6 +324,13 @@ class MainFrame(wx.Frame):
         )
 
         settings["text_regex"] = self.text_regex.GetLineText(0)
+        settings["text_factorio_bin"] = self.text_factorio_bin.GetLineText(0)
+        settings["spin_runs"] = self.spin_runs.GetTextValue()
+        settings["checkbox_disable_mods"] = self.checkbox_disable_mods.GetValue()
+        settings["checkbox_delete_temp_folder"] = self.checkbox_delete_temp_folder.GetValue()
+        settings["spin_ticks"] = self.spin_ticks.GetTextValue()
+        settings["checkbox_high_priority"] = self.checkbox_high_priority.GetValue()
+        settings["text_ctrl_cpus"] = self.text_ctrl_cpus.GetLineText(0)
 
         with open(self.name_of_the_settings_file, "w") as f:
             f.write(json.dumps(settings, indent=4))
@@ -342,7 +358,7 @@ class MainFrame(wx.Frame):
         filenames = glob.glob(os.path.join("saves", self.text_regex.GetLineText(0)), recursive=True)
         filenames = [f for f in filenames if os.path.isfile(f)]
         for name in filenames:
-            self.text_ctrl_maps.AppendText(name+"\n")
+            self.text_ctrl_maps.AppendText(name + "\n")
         event.Skip()
 
     def button_add_map_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -465,11 +481,14 @@ class MainFrame(wx.Frame):
         row = int(event.GetItem().GetText()) - 1
         cols = list.GetColumnCount()
         if row >= 0:
+
+            #
+            # нужен поиск Пути и мд5
+            #
             for col in range(cols):
                 if list.GetColumn(col).GetText() == "id":
                     print(list.GetItemText(row, col))
-                    
-                    
+
                     break
         event.Skip()
 
