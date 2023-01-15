@@ -285,7 +285,14 @@ class MainFrame(wx.Frame):
             self.OnClose,
             self,
         )
+        self.m_timer = wx.Timer(self)
+        self.Bind(
+            wx.EVT_TIMER,
+            self.m_timer_OnTimer,
+            self.m_timer,
+        )
 
+        self.temporary_file = "temp_benchmark_GUI"
         self.column_widths = set()
         self.thread_to_run_test = None
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
@@ -368,6 +375,17 @@ class MainFrame(wx.Frame):
 
         with open(self.name_of_the_settings_file, "w") as f:
             f.write(json.dumps(settings, indent=4))
+
+    def m_timer_OnTimer(self, event):
+        if isinstance(self.thread_to_run_test, threading.Thread):
+            if not self.thread_to_run_test.is_alive():
+                self.thread_to_run_test = None
+                with open(self.temporary_file) as f:
+                    for line in f.readlines():
+                        line = line.rstrip()
+                        self.text_out.AppendText(line + "\n")
+                self.m_timer.Stop()
+        event.Skip()
 
     def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
         self.Close()
@@ -465,6 +483,7 @@ class MainFrame(wx.Frame):
                 ),
             )
             self.thread_to_run_test.start()
+            self.m_timer.Start(500)
         event.Skip()
 
     def start_test(
@@ -481,29 +500,32 @@ class MainFrame(wx.Frame):
         cpus,
         description,
     ):
+        if os.path.exists(self.temporary_file):
+            os.remove(self.temporary_file)
         out_json = None
         benchmark_result = []
         for cpu in cpus:
             if cpu == 0:
                 cpu = psutil.cpu_count()
-            with redirect_stdout(text_out), redirect_stderr(text_out):
-                print("CPUxALL" if cpu == 0 else "CPUx{0:02} ".format(cpu))
-                folder = benchmarker.benchmark_folder(
-                    ticks=ticks,
-                    runs=runs,
-                    disable_mods=disable_mods,
-                    skipticks=skipticks,
-                    map_regex=map_regex,
-                    factorio_bin=factorio_bin,
-                    folder=None,
-                    filenames=filenames,
-                    high_priority=high_priority,
-                    cpu=cpu,
-                )
-                # read out.json
-                with open(os.path.join(folder, "out.json"), "r") as f:
-                    out_json = json.loads(f.read())
-                    benchmark_result.extend(out_json["benchmark_result"])
+            with open(self.temporary_file, "x") as f:
+                with redirect_stdout(f), redirect_stderr(f):
+                    print("CPUxALL" if cpu == 0 else "CPUx{0:02} ".format(cpu))
+                    folder = benchmarker.benchmark_folder(
+                        ticks=ticks,
+                        runs=runs,
+                        disable_mods=disable_mods,
+                        skipticks=skipticks,
+                        map_regex=map_regex,
+                        factorio_bin=factorio_bin,
+                        folder=None,
+                        filenames=filenames,
+                        high_priority=high_priority,
+                        cpu=cpu,
+                    )
+                    # read out.json
+                    with open(os.path.join(folder, "out.json"), "r") as f:
+                        out_json = json.loads(f.read())
+                        benchmark_result.extend(out_json["benchmark_result"])
 
         out_json["benchmark_result"] = benchmark_result
         outfile_json = json.dumps(out_json, indent=4)
@@ -518,6 +540,11 @@ class MainFrame(wx.Frame):
             except OSError:
                 pass
 
+        # with open(temporary_file) as f:
+        #     for line in f.readlines():
+        #         line = line.rstrip()
+        #         text_out.AppendText(line + "\n")
+        # os.remove(temporary_file)
         self.update_benchmark_results_where = ""
         self.update_benchmark_results("")
         self.update_tests_results_where = ""
