@@ -294,8 +294,11 @@ class MainFrame(wx.Frame):
         self.set_the_pathFileDialog_defaultDir = ""
 
         self.restore_settings()
-        self.update_benchmark_results("", "")
-        self.update_tests_results("", "")
+
+        self.update_benchmark_results_where = ""
+        self.update_benchmark_results("")
+        self.update_tests_results_where = ""
+        self.update_tests_results("")
 
     def restore_settings(self):
         if os.path.exists(self.name_of_the_settings_file):
@@ -475,8 +478,10 @@ class MainFrame(wx.Frame):
             except OSError:
                 pass
 
-        self.update_benchmark_results("", "")
-        self.update_tests_results("", "")
+        self.update_benchmark_results_where = ""
+        self.update_benchmark_results("")
+        self.update_tests_results_where = ""
+        self.update_tests_results("")
 
     def button_regex_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         self.text_ctrl_maps.Clear()
@@ -506,13 +511,13 @@ class MainFrame(wx.Frame):
         self.text_ctrl_maps.Clear()
         event.Skip()
 
-    def update_tests_results(self, column_on_which_we_are_sorting, where):
+    def update_tests_results(self, column_on_which_we_are_sorting):
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
             query = self.query_for_tests_results
-            if where:
-                query += where
+            if self.update_tests_results_where:
+                query += self.update_tests_results_where
             if column_on_which_we_are_sorting:
                 query += f" order by {column_on_which_we_are_sorting}"
             else:
@@ -522,12 +527,13 @@ class MainFrame(wx.Frame):
             db.commit()
 
     def button_tests_update_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        self.update_tests_results("", "")
+        self.update_tests_results_where = ""
+        self.update_tests_results("")
         event.Skip()
 
     def list_ctrl_tests_COL_CLICK(self, event):
         col = event.GetColumn()
-        self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText(), "")
+        self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText())
         event.Skip()
 
     def list_ctrl_tests_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -539,7 +545,8 @@ class MainFrame(wx.Frame):
                 text = list.GetItemText(row, col)
                 if text and text[0] == "[":
                     where = " where id in ({})".format(text[1:-1])
-                    self.update_benchmark_results("", where)
+                    self.update_benchmark_results_where = where
+                    self.update_benchmark_results("")
                     break
         event.Skip()
 
@@ -591,13 +598,13 @@ class MainFrame(wx.Frame):
                     list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
                 self.column_widths.add(list)
 
-    def update_benchmark_results(self, column_on_which_we_are_sorting, where):
+    def update_benchmark_results(self, column_on_which_we_are_sorting):
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
             query = self.query_for_benchmark_results
-            if where:
-                query += where
+            if self.update_benchmark_results_where:
+                query += self.update_benchmark_results_where
             if column_on_which_we_are_sorting:
                 query += f" order by {column_on_which_we_are_sorting}"
             else:
@@ -607,12 +614,13 @@ class MainFrame(wx.Frame):
             db.commit()
 
     def button_update_benchmark_results_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        self.update_benchmark_results("", "")
+        self.update_benchmark_results_where = ""
+        self.update_benchmark_results("")
         event.Skip()
 
     def list_ctrl_benchmark_results_COL_CLICK(self, event):
         col = event.GetColumn()
-        self.update_benchmark_results(self.list_ctrl_benchmark_results.GetColumn(col).GetText(), "")
+        self.update_benchmark_results(self.list_ctrl_benchmark_results.GetColumn(col).GetText())
         event.Skip()
 
     def list_ctrl_benchmark_results_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -640,7 +648,8 @@ class MainFrame(wx.Frame):
                         for i in row:
                             ids += str(i) + ","
                     db.commit()
-                    self.update_tests_results("", " where id in ({})".format(ids[:-1]))
+                    self.update_tests_results_where = " where id in ({})".format(ids[:-1])
+                    self.update_tests_results("")
 
         event.Skip()
 
