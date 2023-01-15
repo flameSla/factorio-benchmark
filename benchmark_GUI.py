@@ -12,6 +12,7 @@ import os
 import glob
 import shutil
 from contextlib import redirect_stdout, redirect_stderr
+import threading
 import benchmarker
 import result_to_db
 
@@ -26,7 +27,7 @@ import wx.adv
 
 class MainFrame(wx.Frame):
     def OnClose(self, event):
-        print("__del__")
+        # print("__del__")
         self.save_settings()
         self.Destroy()
 
@@ -178,7 +179,10 @@ class MainFrame(wx.Frame):
         self.panel_3 = wx.Panel(self.Tests, wx.ID_ANY)
         sizer_1.Add(self.panel_3, 20, wx.EXPAND, 0)
 
+        sizer_14 = wx.BoxSizer(wx.HORIZONTAL)
+
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
+        sizer_14.Add(sizer_5, 1, wx.EXPAND, 0)
 
         label_3 = wx.StaticText(self.panel_3, wx.ID_ANY, "Description")
         sizer_5.Add(label_3, 0, 0, 0)
@@ -188,10 +192,14 @@ class MainFrame(wx.Frame):
         )
         sizer_5.Add(self.text_Description, 15, wx.EXPAND, 0)
 
-        self.text_ctrl_command_line = wx.TextCtrl(
-            self.panel_3, wx.ID_ANY, "benchmarker.py", style=wx.TE_READONLY
-        )
-        sizer_5.Add(self.text_ctrl_command_line, 0, 0, 0)
+        sizer_15 = wx.BoxSizer(wx.VERTICAL)
+        sizer_14.Add(sizer_15, 2, wx.EXPAND, 0)
+
+        label_8 = wx.StaticText(self.panel_3, wx.ID_ANY, "Out")
+        sizer_15.Add(label_8, 0, 0, 0)
+
+        self.text_out = wx.TextCtrl(self.panel_3, wx.ID_ANY, "", style=wx.TE_LEFT | wx.TE_MULTILINE)
+        sizer_15.Add(self.text_out, 15, wx.EXPAND, 0)
 
         self.Results = wx.Panel(self.Panel1, wx.ID_ANY)
         self.Panel1.AddPage(self.Results, "Results")
@@ -233,7 +241,7 @@ class MainFrame(wx.Frame):
 
         self.Results.SetSizer(sizer_11)
 
-        self.panel_3.SetSizer(sizer_5)
+        self.panel_3.SetSizer(sizer_14)
 
         self.panel_2.SetSizer(sizer_6)
 
@@ -278,6 +286,7 @@ class MainFrame(wx.Frame):
         )
 
         self.column_widths = set()
+        self.thread_to_run_test = None
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
         self.query_for_tests_results = "select * from tests"
         self.query_for_benchmark_results = "select * from view_benchmark_result"
@@ -318,7 +327,9 @@ class MainFrame(wx.Frame):
                 self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
                 self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
                 self.add_mapFileDialog_defaultDir = settings["add_mapFileDialog_defaultDir"]
-                self.set_the_pathFileDialog_defaultDir = settings["set_the_pathFileDialog_defaultDir"]
+                self.set_the_pathFileDialog_defaultDir = settings[
+                    "set_the_pathFileDialog_defaultDir"
+                ]
 
     def get_list_settings(self, list):
         result = dict()
@@ -376,8 +387,6 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_start_test_OnButton' not implemented!")
-
         map_regex = self.text_regex.GetLineText(0)
         map_regex = map_regex if map_regex else None
 
@@ -391,28 +400,61 @@ class MainFrame(wx.Frame):
         disable_mods = self.checkbox_disable_mods.GetValue()
         high_priority = self.checkbox_high_priority.GetValue()
 
-
-
-        
-        event.Skip()
-        return
+        description = []
+        for i in range(self.text_Description.GetNumberOfLines()):
+            description.append(self.text_Description.GetLineText(i))
+        description = result_to_db.description_list_to_str(description)
+        # maps
+        filenames = []
+        for i in range(self.text_ctrl_maps.GetNumberOfLines()):
+            file = self.text_ctrl_maps.GetLineText(i)
+            if file:
+                filenames.append(file)
+        filenames = filenames if filenames else None
+        if filenames:
+            map_regex = ""
 
         # cpus = self.text_ctrl_cpus.GetLineText(0)
         cpu = 0
+        if isinstance(self.thread_to_run_test, threading.Thread):
+            if not self.thread_to_run_test.is_alive():
+                self.thread_to_run_test = None
+        if self.thread_to_run_test is None:
+            self.text_out.Clear()
+            self.thread_to_run_test = threading.Thread(
+                target=self.start_test,
+                args=(
+                    self.text_out,
+                    ticks,
+                    runs,
+                    disable_mods,
+                    skipticks,
+                    map_regex,
+                    factorio_bin,
+                    filenames,
+                    high_priority,
+                    cpu,
+                    description,
+                ),
+            )
+            self.thread_to_run_test.start()
+        event.Skip()
 
-        # maps
-        # self.text_ctrl_maps.AppendText(map + "\n")
-        filenames = None
-
-
-        # deleting the Temp folder
-        folder = "Temp"
-        try:
-            shutil.rmtree(folder)
-        except OSError:
-            pass
-        
-        with redirect_stdout(self.text_Description), redirect_stderr(self.text_Description):
+    def start_test(
+        self,
+        text_out,
+        ticks,
+        runs,
+        disable_mods,
+        skipticks,
+        map_regex,
+        factorio_bin,
+        filenames,
+        high_priority,
+        cpu,
+        description,
+    ):
+        with redirect_stdout(text_out), redirect_stderr(text_out):
             folder = benchmarker.benchmark_folder(
                 ticks=ticks,
                 runs=runs,
@@ -420,18 +462,21 @@ class MainFrame(wx.Frame):
                 skipticks=skipticks,
                 map_regex=map_regex,
                 factorio_bin=factorio_bin,
-                folder=folder,
+                folder=None,
                 filenames=filenames,
                 high_priority=high_priority,
                 cpu=cpu,
             )
-            result_to_db.result_to_db(folder)
+            result_to_db.result_to_db(folder, description=description)
 
-        # settings["checkbox_delete_temp_folder"] = self.checkbox_delete_temp_folder.GetValue()
+        if self.checkbox_delete_temp_folder.GetValue():
+            try:
+                shutil.rmtree(folder)
+            except OSError:
+                pass
 
-
-
-        event.Skip()
+        self.update_benchmark_results("", "")
+        self.update_tests_results("", "")
 
     def button_regex_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         self.text_ctrl_maps.Clear()
@@ -492,7 +537,7 @@ class MainFrame(wx.Frame):
         if row >= 0:
             for col in range(cols):
                 text = list.GetItemText(row, col)
-                if text[0] == "[":
+                if text and text[0] == "[":
                     where = " where id in ({})".format(text[1:-1])
                     self.update_benchmark_results("", where)
                     break
