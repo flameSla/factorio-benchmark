@@ -10,6 +10,10 @@ from datetime import datetime
 import json
 import os
 import glob
+import shutil
+from contextlib import redirect_stdout, redirect_stderr
+import benchmarker
+import result_to_db
 
 # begin wxGlade: dependencies
 import wx.adv
@@ -66,7 +70,7 @@ class MainFrame(wx.Frame):
         sizer_10.Add(label_7, 0, 0, 0)
 
         self.text_factorio_bin = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
-        self.text_factorio_bin.SetMinSize((120, 16))
+        self.text_factorio_bin.SetMinSize((400, -1))
         sizer_10.Add(self.text_factorio_bin, 0, 0, 0)
 
         self.button_set_the_path = wx.Button(self.panel_1, wx.ID_ANY, "Set the path")
@@ -309,6 +313,7 @@ class MainFrame(wx.Frame):
                 self.text_ctrl_cpus.AppendText(settings["text_ctrl_cpus"])
                 self.spin_runs.SetValue(int(settings["spin_runs"]))
                 self.spin_ticks.SetValue(int(settings["spin_ticks"]))
+                self.spin_skipticks.SetValue(int(settings["spin_skipticks"]))
                 self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
                 self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
                 self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
@@ -334,6 +339,7 @@ class MainFrame(wx.Frame):
         settings["checkbox_disable_mods"] = self.checkbox_disable_mods.GetValue()
         settings["checkbox_delete_temp_folder"] = self.checkbox_delete_temp_folder.GetValue()
         settings["spin_ticks"] = self.spin_ticks.GetTextValue()
+        settings["spin_skipticks"] = self.spin_skipticks.GetTextValue()
         settings["checkbox_high_priority"] = self.checkbox_high_priority.GetValue()
         settings["text_ctrl_cpus"] = self.text_ctrl_cpus.GetLineText(0)
 
@@ -371,6 +377,60 @@ class MainFrame(wx.Frame):
 
     def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         print("Event handler 'button_start_test_OnButton' not implemented!")
+
+        map_regex = self.text_regex.GetLineText(0)
+        map_regex = map_regex if map_regex else None
+
+        factorio_bin = self.text_factorio_bin.GetLineText(0)
+        factorio_bin = factorio_bin if factorio_bin else None
+
+        runs = int(self.spin_runs.GetTextValue())
+        ticks = int(self.spin_ticks.GetTextValue())
+        skipticks = int(self.spin_skipticks.GetTextValue())
+
+        disable_mods = self.checkbox_disable_mods.GetValue()
+        high_priority = self.checkbox_high_priority.GetValue()
+
+
+
+        
+        event.Skip()
+        return
+
+        # cpus = self.text_ctrl_cpus.GetLineText(0)
+        cpu = 0
+
+        # maps
+        # self.text_ctrl_maps.AppendText(map + "\n")
+        filenames = None
+
+
+        # deleting the Temp folder
+        folder = "Temp"
+        try:
+            shutil.rmtree(folder)
+        except OSError:
+            pass
+        
+        with redirect_stdout(self.text_Description), redirect_stderr(self.text_Description):
+            folder = benchmarker.benchmark_folder(
+                ticks=ticks,
+                runs=runs,
+                disable_mods=disable_mods,
+                skipticks=skipticks,
+                map_regex=map_regex,
+                factorio_bin=factorio_bin,
+                folder=folder,
+                filenames=filenames,
+                high_priority=high_priority,
+                cpu=cpu,
+            )
+            result_to_db.result_to_db(folder)
+
+        # settings["checkbox_delete_temp_folder"] = self.checkbox_delete_temp_folder.GetValue()
+
+
+
         event.Skip()
 
     def button_regex_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
