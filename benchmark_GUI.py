@@ -319,11 +319,9 @@ class MainFrame(wx.Frame):
                     if settings["list_ctrl_benchmark_results"][col]:
                         cols += col + ","
                 if len(cols) > 0:
-                    self.query_for_benchmark_results = "select {} from view_benchmark_result".format(
-                        cols[:-1]
+                    self.query_for_benchmark_results = (
+                        "select {} from view_benchmark_result".format(cols[:-1])
                     )
-                print(self.query_for_tests_results)
-                print(self.query_for_benchmark_results)
 
                 self.text_regex.Clear()
                 self.text_regex.AppendText(settings["text_regex"])
