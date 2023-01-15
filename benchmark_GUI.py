@@ -13,6 +13,7 @@ import glob
 import shutil
 from contextlib import redirect_stdout, redirect_stderr
 import threading
+import psutil
 import benchmarker
 import result_to_db
 
@@ -417,8 +418,28 @@ class MainFrame(wx.Frame):
         if filenames:
             map_regex = ""
 
-        # cpus = self.text_ctrl_cpus.GetLineText(0)
-        cpu = 0
+        cpu_list = []
+        for cpu in self.text_ctrl_cpus.GetLineText(0).split(","):
+            try:
+                c = int(cpu)
+                if c < 0:
+                    raise Exception("<0")
+                if c > psutil.cpu_count():
+                    raise Exception(f">{psutil.cpu_count()}")
+                cpu_list.append(c)
+            except Exception as e:
+                text = "Exception exception: " + str(e) + "\n"
+                text += (
+                    f"CPUS must be a number greater than 0 and less than {psutil.cpu_count()+1} separated by commas.\n"
+                )
+                text += "Example:\n"
+                text += "'0'\n"
+                text += "'1,4,8,12'\n"
+                wx.MessageBox(text, "Error", wx.ICON_INFORMATION)
+                event.Skip()
+                return
+        cpu = [0]
+
         if isinstance(self.thread_to_run_test, threading.Thread):
             if not self.thread_to_run_test.is_alive():
                 self.thread_to_run_test = None
@@ -436,7 +457,7 @@ class MainFrame(wx.Frame):
                     factorio_bin,
                     filenames,
                     high_priority,
-                    cpu,
+                    cpu_list,
                     description,
                 ),
             )
@@ -454,23 +475,39 @@ class MainFrame(wx.Frame):
         factorio_bin,
         filenames,
         high_priority,
-        cpu,
+        cpus,
         description,
     ):
-        with redirect_stdout(text_out), redirect_stderr(text_out):
-            folder = benchmarker.benchmark_folder(
-                ticks=ticks,
-                runs=runs,
-                disable_mods=disable_mods,
-                skipticks=skipticks,
-                map_regex=map_regex,
-                factorio_bin=factorio_bin,
-                folder=None,
-                filenames=filenames,
-                high_priority=high_priority,
-                cpu=cpu,
-            )
-            result_to_db.result_to_db(folder, description=description)
+        out_json = None
+        benchmark_result = []
+        for cpu in cpus:
+            if cpu == 0:
+                cpu = psutil.cpu_count()
+            with redirect_stdout(text_out), redirect_stderr(text_out):
+                print("CPUxALL" if cpu == 0 else "CPUx{0:02} ".format(cpu))
+                folder = benchmarker.benchmark_folder(
+                    ticks=ticks,
+                    runs=runs,
+                    disable_mods=disable_mods,
+                    skipticks=skipticks,
+                    map_regex=map_regex,
+                    factorio_bin=factorio_bin,
+                    folder=None,
+                    filenames=filenames,
+                    high_priority=high_priority,
+                    cpu=cpu,
+                )
+                # read out.json
+                with open(os.path.join(folder, "out.json"), "r") as f:
+                    out_json = json.loads(f.read())
+                    benchmark_result.extend(out_json["benchmark_result"])
+
+        out_json["benchmark_result"] = benchmark_result
+        outfile_json = json.dumps(out_json, indent=4)
+        out_path = os.path.join(folder, "out.json")
+        with open(out_path, "w") as outjson_file:
+            outjson_file.write(outfile_json)
+        result_to_db.result_to_db(folder, description=description)
 
         if self.checkbox_delete_temp_folder.GetValue():
             try:
