@@ -65,7 +65,8 @@ class MainFrame(wx.Frame):
         label_7.SetMinSize((75, 16))
         sizer_10.Add(label_7, 0, 0, 0)
 
-        self.text_factorio_bin = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.TE_READONLY)
+        self.text_factorio_bin = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
+        self.text_factorio_bin.SetMinSize((120, 16))
         sizer_10.Add(self.text_factorio_bin, 0, 0, 0)
 
         self.button_set_the_path = wx.Button(self.panel_1, wx.ID_ANY, "Set the path")
@@ -276,6 +277,8 @@ class MainFrame(wx.Frame):
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
         self.query_for_tests_results = "select * from tests"
         self.query_for_benchmark_results = "select * from view_benchmark_result"
+        self.add_mapFileDialog_defaultDir = ""
+        self.set_the_pathFileDialog_defaultDir = ""
 
         self.restore_settings()
         self.update_benchmark_results("", "")
@@ -309,6 +312,8 @@ class MainFrame(wx.Frame):
                 self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
                 self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
                 self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
+                self.add_mapFileDialog_defaultDir = settings["add_mapFileDialog_defaultDir"]
+                self.set_the_pathFileDialog_defaultDir = settings["set_the_pathFileDialog_defaultDir"]
 
     def get_list_settings(self, list):
         result = dict()
@@ -332,6 +337,9 @@ class MainFrame(wx.Frame):
         settings["checkbox_high_priority"] = self.checkbox_high_priority.GetValue()
         settings["text_ctrl_cpus"] = self.text_ctrl_cpus.GetLineText(0)
 
+        settings["add_mapFileDialog_defaultDir"] = self.add_mapFileDialog_defaultDir
+        settings["set_the_pathFileDialog_defaultDir"] = self.set_the_pathFileDialog_defaultDir
+
         with open(self.name_of_the_settings_file, "w") as f:
             f.write(json.dumps(settings, indent=4))
 
@@ -346,7 +354,19 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_set_the_path_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_set_the_path_OnButton' not implemented!")
+        set_the_path_FileDialog = wx.FileDialog(
+            self,
+            "Add map",
+            defaultDir=self.set_the_pathFileDialog_defaultDir,
+            defaultFile="factorio",
+            wildcard="",
+            style=wx.FD_OPEN,
+        )
+        if set_the_path_FileDialog.ShowModal() == wx.ID_OK:
+            map = set_the_path_FileDialog.GetPath()
+            self.text_factorio_bin.Clear()
+            self.text_factorio_bin.AppendText(map)
+            self.set_the_pathFileDialog_defaultDir = os.path.dirname(map)
         event.Skip()
 
     def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -362,7 +382,19 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_add_map_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        print("Event handler 'button_add_map_OnButton' not implemented!")
+        add_mapFileDialog = wx.FileDialog(
+            self,
+            "Add map",
+            defaultDir=self.add_mapFileDialog_defaultDir,
+            defaultFile="",
+            wildcard="Maps|*.zip",
+            style=wx.FD_OPEN | wx.FD_MULTIPLE,
+        )
+        if add_mapFileDialog.ShowModal() == wx.ID_OK:
+            maps = add_mapFileDialog.GetPaths()
+            for map in maps:
+                self.text_ctrl_maps.AppendText(map + "\n")
+                self.add_mapFileDialog_defaultDir = os.path.dirname(map)
         event.Skip()
 
     def button_reset_maps_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
