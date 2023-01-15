@@ -295,6 +295,9 @@ class MainFrame(wx.Frame):
         self.set_the_pathFileDialog_defaultDir = ""
 
         self.restore_settings()
+        # creating a database
+        if not os.path.exists("benchmark_result.db3"):
+            result_to_db.create_db("benchmark_result.db3")
 
         self.update_benchmark_results_where = ""
         self.update_benchmark_results("")
@@ -309,14 +312,18 @@ class MainFrame(wx.Frame):
                 for col in settings["list_ctrl_tests"]:
                     if settings["list_ctrl_tests"][col]:
                         cols += col + ","
-                self.query_for_tests_results = "select {} from tests".format(cols[:-1])
+                if len(cols) > 0:
+                    self.query_for_tests_results = "select {} from tests".format(cols[:-1])
                 cols = ""
                 for col in settings["list_ctrl_benchmark_results"]:
                     if settings["list_ctrl_benchmark_results"][col]:
                         cols += col + ","
-                self.query_for_benchmark_results = "select {} from view_benchmark_result".format(
-                    cols[:-1]
-                )
+                if len(cols) > 0:
+                    self.query_for_benchmark_results = "select {} from view_benchmark_result".format(
+                        cols[:-1]
+                    )
+                print(self.query_for_tests_results)
+                print(self.query_for_benchmark_results)
 
                 self.text_regex.Clear()
                 self.text_regex.AppendText(settings["text_regex"])
@@ -429,9 +436,7 @@ class MainFrame(wx.Frame):
                 cpu_list.append(c)
             except Exception as e:
                 text = "Exception exception: " + str(e) + "\n"
-                text += (
-                    f"CPUS must be a number greater than 0 and less than {psutil.cpu_count()+1} separated by commas.\n"
-                )
+                text += f"CPUS must be a number greater than 0 and less than {psutil.cpu_count()+1} separated by commas.\n"
                 text += "Example:\n"
                 text += "'0'\n"
                 text += "'1,4,8,12'\n"
