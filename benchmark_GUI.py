@@ -279,7 +279,7 @@ class MainFrame(wx.Frame):
 
         self.restore_settings()
         self.update_benchmark_results("", "")
-        self.update_tests_results("")
+        self.update_tests_results("", "")
 
     def restore_settings(self):
         if os.path.exists(self.name_of_the_settings_file):
@@ -369,11 +369,13 @@ class MainFrame(wx.Frame):
         self.text_ctrl_maps.Clear()
         event.Skip()
 
-    def update_tests_results(self, column_on_which_we_are_sorting):
+    def update_tests_results(self, column_on_which_we_are_sorting, where):
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
             query = self.query_for_tests_results
+            if where:
+                query += where
             if column_on_which_we_are_sorting:
                 query += f" order by {column_on_which_we_are_sorting}"
             else:
@@ -383,12 +385,12 @@ class MainFrame(wx.Frame):
             db.commit()
 
     def button_tests_update_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        self.update_tests_results("")
+        self.update_tests_results("", "")
         event.Skip()
 
     def list_ctrl_tests_COL_CLICK(self, event):
         col = event.GetColumn()
-        self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText())
+        self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText(), "")
         event.Skip()
 
     def list_ctrl_tests_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -481,15 +483,28 @@ class MainFrame(wx.Frame):
         row = int(event.GetItem().GetText()) - 1
         cols = list.GetColumnCount()
         if row >= 0:
-
-            #
-            # нужен поиск Пути и мд5
-            #
+            path = ""
+            md5 = ""
             for col in range(cols):
-                if list.GetColumn(col).GetText() == "id":
-                    print(list.GetItemText(row, col))
+                if list.GetColumn(col).GetText() == "path":
+                    path = list.GetItemText(row, col)
+                if list.GetColumn(col).GetText() == "md5":
+                    md5 = list.GetItemText(row, col)
+            if path and md5:
+                with sqlite3.connect("benchmark_result.db3") as db:
+                    db.row_factory = sqlite3.Row
+                    cur = db.cursor()
+                    query = "select id_tests from view_test where path='{}' and md5='{}'".format(
+                        path, md5
+                    )
+                    cur.execute(query)
+                    ids = ""
+                    for row in cur:
+                        for i in row:
+                            ids += str(i) + ","
+                    db.commit()
+                    self.update_tests_results("", " where id in ({})".format(ids[:-1]))
 
-                    break
         event.Skip()
 
 
