@@ -361,7 +361,7 @@ def benchmark_folder(
     ]
     out_path = os.path.join(folder, "out.json")
     outfile_json = json.dumps(outfile_1, indent=4)
-    with open(out_path, "w+") as outjson_file:
+    with open(out_path, "w") as outjson_file:
         outjson_file.write(outfile_json)
 
     print()
