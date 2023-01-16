@@ -309,6 +309,7 @@ class MainFrame(wx.Frame):
         )
 
         self.temporary_file = "temp_benchmark_GUI"
+        self.out_printed_lines = 0
         self.column_widths = set()
         self.thread_to_run_test = None
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
@@ -395,13 +396,22 @@ class MainFrame(wx.Frame):
             f.write(json.dumps(settings, indent=4))
 
     def m_timer_OnTimer(self, event):
+        with open(self.temporary_file, mode="r") as f:
+            new_lines = []
+            for line in f.readlines():
+                line = line.rstrip()
+                new_lines.append(line)
+
+            # we print only new lines
+            for i in range(self.out_printed_lines, len(new_lines)):
+                self.text_out.AppendText(new_lines[i] + "\n")
+
+            self.out_printed_lines = len(new_lines)
+
         if isinstance(self.thread_to_run_test, threading.Thread):
             if not self.thread_to_run_test.is_alive():
                 self.thread_to_run_test = None
-                with open(self.temporary_file) as f:
-                    for line in f.readlines():
-                        line = line.rstrip()
-                        self.text_out.AppendText(line + "\n")
+                self.out_printed_lines = 0
                 self.m_timer.Stop()
         event.Skip()
 
@@ -566,7 +576,7 @@ class MainFrame(wx.Frame):
         for cpu in cpus:
             if cpu == 0:
                 cpu = psutil.cpu_count()
-            with open(self.temporary_file, "x") as f:
+            with open(self.temporary_file, mode="w") as f:
                 with redirect_stdout(f), redirect_stderr(f):
                     print("CPUxALL" if cpu == 0 else "CPUx{0:02} ".format(cpu))
                     folder = benchmarker.benchmark_folder(
