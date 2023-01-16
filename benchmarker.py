@@ -17,6 +17,7 @@ from pathlib import Path
 import hashlib
 import result_to_db
 from typing import Any
+import sys
 
 outheader = [
     "name",
@@ -199,6 +200,7 @@ def run_benchmark(
             )
             with open(os.path.join(folder, "saves", md5 + ".log"), "x") as f:
                 f.write("\n".join(filtered_output))
+            sys.stdout.flush()
 
 
 def get_md5(fname: str) -> str:
