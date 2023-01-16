@@ -1,4 +1,5 @@
 temp_benchmark_GUI
+*.bak
 *.json
 *.db3
 *.exe
@@ -17,3 +18,4 @@ Factorio_1.0.0/
 benchsaves2/
 saves/
 maps_1_0/
+maps_1_1/
