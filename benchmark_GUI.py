@@ -126,6 +126,12 @@ class MainFrame(wx.Frame):
         self.checkbox_high_priority.SetValue(1)
         sizer_4.Add(self.checkbox_high_priority, 0, 0, 0)
 
+        self.checkbox_plot_results = wx.CheckBox(
+            self.panel_1, wx.ID_ANY, "Plot results", style=wx.ALIGN_RIGHT
+        )
+        self.checkbox_plot_results.SetMinSize((100, -1))
+        sizer_4.Add(self.checkbox_plot_results, 0, 0, 0)
+
         sizer_4.Add((20, 20), 0, 0, 0)
 
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
@@ -193,6 +199,11 @@ class MainFrame(wx.Frame):
         )
         sizer_5.Add(self.text_Description, 15, wx.EXPAND, 0)
 
+        self.button_create_test_run_script = wx.Button(
+            self.panel_3, wx.ID_ANY, "Create a test run script"
+        )
+        sizer_5.Add(self.button_create_test_run_script, 0, 0, 0)
+
         sizer_15 = wx.BoxSizer(wx.VERTICAL)
         sizer_14.Add(sizer_15, 2, wx.EXPAND, 0)
 
@@ -257,6 +268,11 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.button_regex_OnButton, self.button_regex)
         self.Bind(wx.EVT_BUTTON, self.button_add_map_OnButton, self.button_add_map)
         self.Bind(wx.EVT_BUTTON, self.button_reset_maps_OnButton, self.button_reset_maps)
+        self.Bind(
+            wx.EVT_BUTTON,
+            self.button_create_test_run_script_OnButton,
+            self.button_create_test_run_script,
+        )
         self.Bind(wx.EVT_BUTTON, self.button_tests_update_OnButton, self.button_tests_update)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.list_ctrl_tests_SELECTED, self.list_ctrl_tests)
         self.Bind(
@@ -342,6 +358,7 @@ class MainFrame(wx.Frame):
                 self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
                 self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
                 self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
+                self.checkbox_plot_results.SetValue(settings["checkbox_plot_results"])
                 self.add_mapFileDialog_defaultDir = settings["add_mapFileDialog_defaultDir"]
                 self.set_the_pathFileDialog_defaultDir = settings[
                     "set_the_pathFileDialog_defaultDir"
@@ -369,6 +386,7 @@ class MainFrame(wx.Frame):
         settings["spin_skipticks"] = self.spin_skipticks.GetTextValue()
         settings["checkbox_high_priority"] = self.checkbox_high_priority.GetValue()
         settings["text_ctrl_cpus"] = self.text_ctrl_cpus.GetLineText(0)
+        settings["checkbox_plot_results"] = self.checkbox_plot_results.GetValue()
 
         settings["add_mapFileDialog_defaultDir"] = self.add_mapFileDialog_defaultDir
         settings["set_the_pathFileDialog_defaultDir"] = self.set_the_pathFileDialog_defaultDir
@@ -397,6 +415,10 @@ class MainFrame(wx.Frame):
         del AboutDialog
         event.Skip()
 
+    def button_create_test_run_script_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+        print("Event handler 'button_create_test_run_script_OnButton' not implemented!")
+        event.Skip()
+
     def button_set_the_path_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         set_the_path_FileDialog = wx.FileDialog(
             self,
@@ -413,7 +435,7 @@ class MainFrame(wx.Frame):
             self.set_the_pathFileDialog_defaultDir = os.path.dirname(map)
         event.Skip()
 
-    def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def get_arguments_to_start_test(self):
         map_regex = self.text_regex.GetLineText(0)
         map_regex = map_regex if map_regex else None
 
@@ -431,6 +453,7 @@ class MainFrame(wx.Frame):
         for i in range(self.text_Description.GetNumberOfLines()):
             description.append(self.text_Description.GetLineText(i))
         description = result_to_db.description_list_to_str(description)
+
         # maps
         filenames = []
         for i in range(self.text_ctrl_maps.GetNumberOfLines()):
@@ -457,38 +480,72 @@ class MainFrame(wx.Frame):
                 text += "'0'\n"
                 text += "'1,4,8,12'\n"
                 wx.MessageBox(text, "Error", wx.ICON_INFORMATION)
-                event.Skip()
-                return
-        cpu = [0]
+                cpu_list = None
 
-        if isinstance(self.thread_to_run_test, threading.Thread):
-            if not self.thread_to_run_test.is_alive():
-                self.thread_to_run_test = None
-        if self.thread_to_run_test is None:
-            self.text_out.Clear()
-            self.thread_to_run_test = threading.Thread(
-                target=self.start_test,
-                args=(
-                    self.text_out,
-                    ticks,
-                    runs,
-                    disable_mods,
-                    skipticks,
-                    map_regex,
-                    factorio_bin,
-                    filenames,
-                    high_priority,
-                    cpu_list,
-                    description,
-                ),
-            )
-            self.thread_to_run_test.start()
-            self.m_timer.Start(500)
+        delete_temp_folder = self.checkbox_delete_temp_folder.GetValue()
+        plot_results = self.checkbox_plot_results.GetValue()
+
+        return (
+            ticks,
+            runs,
+            disable_mods,
+            skipticks,
+            map_regex,
+            factorio_bin,
+            filenames,
+            high_priority,
+            cpu_list,
+            description,
+            delete_temp_folder,
+            plot_results,
+        )
+
+    def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+        (
+            ticks,
+            runs,
+            disable_mods,
+            skipticks,
+            map_regex,
+            factorio_bin,
+            filenames,
+            high_priority,
+            cpu_list,
+            description,
+            delete_temp_folder,
+            plot_results,
+        ) = self.get_arguments_to_start_test()
+
+        if cpu_list is not None:
+            if isinstance(self.thread_to_run_test, threading.Thread):
+                if not self.thread_to_run_test.is_alive():
+                    self.thread_to_run_test = None
+            if self.thread_to_run_test is None:
+                self.text_out.Clear()
+                self.thread_to_run_test = threading.Thread(
+                    target=self.start_test,
+                    args=(
+                        ticks,
+                        runs,
+                        disable_mods,
+                        skipticks,
+                        map_regex,
+                        factorio_bin,
+                        filenames,
+                        high_priority,
+                        cpu_list,
+                        description,
+                        delete_temp_folder,
+                        plot_results,
+                    ),
+                )
+                self.thread_to_run_test.start()
+                self.m_timer.Start(500)
+
         event.Skip()
 
     def start_test(
         self,
-        text_out,
         ticks,
         runs,
         disable_mods,
@@ -499,6 +556,8 @@ class MainFrame(wx.Frame):
         high_priority,
         cpus,
         description,
+        delete_temp_folder,
+        plot_results,
     ):
         if os.path.exists(self.temporary_file):
             os.remove(self.temporary_file)
@@ -534,17 +593,14 @@ class MainFrame(wx.Frame):
             outjson_file.write(outfile_json)
         result_to_db.result_to_db(folder, description=description)
 
-        if self.checkbox_delete_temp_folder.GetValue():
+        if plot_results:
+            benchmarker.plot_benchmark_results(folder)
+        elif delete_temp_folder:
             try:
                 shutil.rmtree(folder)
             except OSError:
                 pass
 
-        # with open(temporary_file) as f:
-        #     for line in f.readlines():
-        #         line = line.rstrip()
-        #         text_out.AppendText(line + "\n")
-        # os.remove(temporary_file)
         self.update_benchmark_results_where = ""
         self.update_benchmark_results("")
         self.update_tests_results_where = ""
@@ -706,9 +762,10 @@ class MainFrame(wx.Frame):
                 with sqlite3.connect("benchmark_result.db3") as db:
                     db.row_factory = sqlite3.Row
                     cur = db.cursor()
-                    query = "select id_tests from view_test where path='{}' and md5='{}'".format(
-                        path, md5
-                    )
+                    # query = "select id_tests from view_test where path='{}' and md5='{}'".format(
+                    #     path, md5
+                    # )
+                    query = "select id_tests from view_test where path='{}'".format(path)
                     cur.execute(query)
                     ids = ""
                     for row in cur:
