@@ -265,7 +265,7 @@ def benchmark_folder(
 
     # md5 calculation for files
     print("maps:")
-    filenames = [f for f in filenames if os.path.isfile(f)]
+    filenames = [f for f in filenames if os.path.splitext(f)[1] == '.zip' and os.path.isfile(f)]
     for filename in filenames:
         print(filename)
     print()

@@ -19,6 +19,7 @@ import result_to_db
 
 # begin wxGlade: dependencies
 import wx.adv
+import wx.grid
 
 # end wxGlade
 
@@ -268,11 +269,23 @@ class MainFrame(wx.Frame):
         self.button_reset_maps = wx.Button(self.panel_2, wx.ID_ANY, "Reset maps")
         sizer_7.Add(self.button_reset_maps, 0, 0, 0)
 
-        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Maps:")
-        sizer_6.Add(label_4, 0, 0, 0)
+        sizer_20 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_6.Add(sizer_20, 0, wx.EXPAND, 0)
 
-        self.text_ctrl_maps = wx.TextCtrl(self.panel_2, wx.ID_ANY, "", style=wx.TE_MULTILINE)
-        sizer_6.Add(self.text_ctrl_maps, 10, wx.EXPAND, 0)
+        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Maps:")
+        sizer_20.Add(label_4, 0, 0, 0)
+        sizer_20.Add((20, 20), 10, wx.EXPAND, 0)
+
+        self.button_add_10_lines = wx.Button(self.panel_2, wx.ID_ANY, "Add 10 lines")
+        sizer_20.Add(self.button_add_10_lines, 0, 0, 0)
+
+        self.grid_maps = wx.grid.Grid(self.panel_2, wx.ID_ANY, size=(1, 1))
+        self.grid_maps.CreateGrid(10, 2)
+        self.grid_maps.SetColLabelValue(0, "Path")
+        self.grid_maps.SetColSize(0, 1000)
+        self.grid_maps.SetColLabelValue(1, "On? (0/1)")
+        self.grid_maps.SetColSize(1, 60)
+        sizer_6.Add(self.grid_maps, 10, wx.EXPAND, 0)
 
         self.panel_3 = wx.Panel(self.Tests, wx.ID_ANY)
         sizer_1.Add(self.panel_3, 20, wx.EXPAND, 0)
@@ -439,6 +452,7 @@ class MainFrame(wx.Frame):
             self.m_timer_OnTimer,
             self.m_timer,
         )
+        self.Bind(wx.EVT_BUTTON, self.button_add_10_lines_OnButton, self.button_add_10_lines)
 
         self.temporary_file = "temp_benchmark_GUI"
         self.out_printed_lines = 0
@@ -619,9 +633,6 @@ class MainFrame(wx.Frame):
             f"test_{datetime_now.strftime('%Y-%m-%d')}_{datetime_now.strftime('%H_%M_%S')}.py"
         )
 
-        settings = "settings=" + str(json.dumps(args))
-        args["settings"] = settings
-
         args_str = {}
         for k, v in args.items():
             args_str[k] = str(v)
@@ -676,11 +687,21 @@ class MainFrame(wx.Frame):
         description = self.get_description(self.text_Description)
 
         # maps
+        filenames_dict = {}
+        grid = self.grid_maps
+        for i in range(grid.GetNumberRows()):
+            if grid.GetCellValue(i, 0):
+                if os.path.splitext(grid.GetCellValue(i, 0))[1] == "" and os.path.isfile(
+                    grid.GetCellValue(i, 0) + ".zip"
+                ):
+                    grid.SetCellValue(i, 0, grid.GetCellValue(i, 0) + ".zip")
+                filenames_dict[grid.GetCellValue(i, 0)] = grid.GetCellValue(i, 1)
+
         filenames = []
-        for i in range(self.text_ctrl_maps.GetNumberOfLines()):
-            file = self.text_ctrl_maps.GetLineText(i)
-            if file:
-                filenames.append(file)
+        for map, enable in filenames_dict.items():
+            if enable == "1":
+                filenames.append(map)
+        filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
         filenames = filenames if filenames else None
         if filenames:
             map_regex = ""
@@ -714,11 +735,15 @@ class MainFrame(wx.Frame):
         res["map_regex"] = map_regex
         res["factorio_bin"] = factorio_bin
         res["filenames"] = filenames
+        res["filenames_dict"] = filenames_dict
         res["high_priority"] = high_priority
         res["cpu_list"] = cpu_list
         res["description"] = description
         res["delete_temp_folder"] = delete_temp_folder
         res["plot_results"] = plot_results
+
+        settings = "settings=" + str(json.dumps(res))
+        res["settings"] = settings
 
         return res
 
@@ -748,11 +773,13 @@ class MainFrame(wx.Frame):
         map_regex,
         factorio_bin,
         filenames,
+        filenames_dict,
         high_priority,
         cpu_list,
         description,
         delete_temp_folder,
         plot_results,
+        settings,
     ):
         if os.path.exists(self.temporary_file):
             os.remove(self.temporary_file)
@@ -804,11 +831,19 @@ class MainFrame(wx.Frame):
         self.update_tests_results("")
 
     def button_regex_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        self.text_ctrl_maps.Clear()
         filenames = glob.glob(os.path.join("saves", self.text_regex.GetLineText(0)), recursive=True)
-        filenames = [f for f in filenames if os.path.isfile(f)]
-        for name in filenames:
-            self.text_ctrl_maps.AppendText(name + "\n")
+        filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
+
+        grid = self.grid_maps
+        grid.BeginBatch()
+        grid.ClearGrid()
+        grid.DeleteRows(0, grid.GetNumberRows())
+        number_rows = len(filenames) + 10
+        grid.InsertRows(pos=0, numRows=number_rows)
+        for i, name in enumerate(filenames, start=0):
+            grid.SetCellValue(i, 0, name)
+            grid.SetCellValue(i, 1, "1")
+        grid.EndBatch()
         event.Skip()
 
     def button_add_map_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
@@ -822,13 +857,38 @@ class MainFrame(wx.Frame):
         )
         if add_mapFileDialog.ShowModal() == wx.ID_OK:
             maps = add_mapFileDialog.GetPaths()
-            for map in maps:
-                self.text_ctrl_maps.AppendText(map + "\n")
+            grid = self.grid_maps
+            grid.BeginBatch()
+
+            index_of_new_line = 0
+            for i in range(grid.GetNumberRows() - 1, 0, -1):
+                if grid.GetCellValue(i, 0):
+                    index_of_new_line = i + 1
+                    break
+
+            grid.InsertRows(pos=grid.GetNumberRows(), numRows=len(maps))
+            for i, map in enumerate(maps, start=index_of_new_line):
+                grid.SetCellValue(i, 0, map)
+                grid.SetCellValue(i, 1, "1")
                 self.add_mapFileDialog_defaultDir = os.path.dirname(map)
+
+            grid.EndBatch()
         event.Skip()
 
     def button_reset_maps_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
-        self.text_ctrl_maps.Clear()
+        grid = self.grid_maps
+        grid.BeginBatch()
+        grid.ClearGrid()
+        grid.DeleteRows(0, grid.GetNumberRows())
+        grid.InsertRows(pos=0, numRows=10)
+        grid.EndBatch()
+        event.Skip()
+
+    def button_add_10_lines_OnButton(self, event):
+        grid = self.grid_maps
+        grid.BeginBatch()
+        grid.InsertRows(pos=grid.GetNumberRows(), numRows=10)
+        grid.EndBatch()
         event.Skip()
 
     def update_tests_results(self, column_on_which_we_are_sorting):
