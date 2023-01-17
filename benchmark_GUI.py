@@ -315,10 +315,16 @@ class MainFrame(wx.Frame):
         )
         sizer_5.Add(self.text_Description, 15, wx.EXPAND, 0)
 
+        sizer_21 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_5.Add(sizer_21, 0, wx.EXPAND, 0)
+
         self.button_create_test_run_script = wx.Button(
             self.panel_3, wx.ID_ANY, "Create a test run script"
         )
-        sizer_5.Add(self.button_create_test_run_script, 0, 0, 0)
+        sizer_21.Add(self.button_create_test_run_script, 0, 0, 0)
+
+        self.button_load_script = wx.Button(self.panel_3, wx.ID_ANY, "Load the script")
+        sizer_21.Add(self.button_load_script, 0, 0, 0)
 
         sizer_15 = wx.BoxSizer(wx.VERTICAL)
         sizer_14.Add(sizer_15, 2, wx.EXPAND, 0)
@@ -465,6 +471,7 @@ class MainFrame(wx.Frame):
             self.m_timer,
         )
         self.Bind(wx.EVT_BUTTON, self.button_add_10_lines_OnButton, self.button_add_10_lines)
+        self.Bind(wx.EVT_BUTTON, self.button_load_script_OnButton, self.button_load_script)
 
         self.temporary_file = "temp_benchmark_GUI"
         self.out_printed_lines = 0
@@ -638,6 +645,76 @@ class MainFrame(wx.Frame):
 
         event.Skip()
 
+    def button_load_script_OnButton(self, event):
+        load_script_FileDialog = wx.FileDialog(
+            self,
+            "Load script",
+            defaultDir=get_script_dir(),
+            defaultFile="",
+            wildcard="python files (*.py)|*.py",
+            style=wx.FD_OPEN,
+        )
+        if load_script_FileDialog.ShowModal() == wx.ID_OK:
+            script = load_script_FileDialog.GetPath()
+            with open(script) as f:
+                for line in f.readlines():
+                    if "# settings=" in line:
+                        try:
+                            settings = json.loads(line.strip().replace("# settings=", ""))
+                        except:
+                            continue
+                        # print(str(json.dumps(settings, indent=4)))
+                        settings["factorio_bin"] = (
+                            settings["factorio_bin"] if settings["factorio_bin"] else ""
+                        )
+                        settings["map_regex"] = (
+                            settings["map_regex"] if settings["map_regex"] else ""
+                        )
+                        self.text_regex.Clear()
+                        self.text_regex.AppendText(settings["map_regex"])
+                        self.text_factorio_bin.Clear()
+                        self.text_factorio_bin.AppendText(settings["factorio_bin"])
+                        self.spin_runs.SetValue(int(settings["runs"]))
+                        self.spin_ticks.SetValue(int(settings["ticks"]))
+                        self.spin_skipticks.SetValue(int(settings["skipticks"]))
+                        self.checkbox_disable_mods.SetValue(settings["disable_mods"])
+                        self.checkbox_delete_temp_folder.SetValue(settings["delete_temp_folder"])
+                        self.checkbox_high_priority.SetValue(settings["high_priority"])
+                        self.checkbox_plot_results.SetValue(settings["plot_results"])
+                        # cpus
+                        self.text_ctrl_cpus.Clear()
+                        cpus = ""
+                        if settings["cpu_list"]:
+                            for cpu in settings["cpu_list"]:
+                                cpus += str(cpu) + ","
+                            cpus = cpus[:-1]
+                        self.text_ctrl_cpus.AppendText(cpus)
+                        # load description
+                        lines = result_to_db.description_str_to_list(settings["description"])
+                        self.text_Description.Clear()
+                        description = ""
+                        for line in lines:
+                            if line:
+                                description += line + "\n"
+                        if description:
+                            self.text_Description.AppendText(description[:-1])
+                        # filenames
+                        grid = self.grid_maps
+                        grid.BeginBatch()
+                        grid.ClearGrid()
+                        grid.DeleteRows(0, grid.GetNumberRows())
+                        filenames = settings["filenames_dict"]
+                        number_rows = len(filenames) + 10
+                        grid.InsertRows(pos=0, numRows=number_rows)
+                        for i, (map, enable) in enumerate(filenames.items()):
+                            grid.SetCellValue(i, 0, map)
+                            grid.SetCellValue(i, 1, enable)
+                        grid.EndBatch()
+
+                        self.text_out.AppendText(f"\nScript '{script}' loaded\n")
+                        break
+        event.Skip()
+
     def button_create_test_run_script_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         args = self.get_arguments_to_start_test()
         datetime_now = datetime.now()
@@ -672,7 +749,7 @@ class MainFrame(wx.Frame):
     def button_set_the_path_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         set_the_path_FileDialog = wx.FileDialog(
             self,
-            "Add map",
+            "Set the path",
             defaultDir=self.set_the_pathFileDialog_defaultDir,
             defaultFile="factorio",
             wildcard="",
