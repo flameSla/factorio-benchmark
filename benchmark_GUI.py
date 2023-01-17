@@ -61,6 +61,8 @@ def start_test(
         os.remove(temporary_file)
     out_json = None
     benchmark_result = []
+    if not high_priority:
+        cpu_list = [0]
     for cpu in cpu_list:
         if cpu == 0:
             cpu = psutil.cpu_count()
