@@ -661,7 +661,7 @@ class MainFrame(wx.Frame):
                     if "# settings=" in line:
                         try:
                             settings = json.loads(line.strip().replace("# settings=", ""))
-                        except:
+                        except Exception:
                             continue
                         # print(str(json.dumps(settings, indent=4)))
                         settings["factorio_bin"] = (
