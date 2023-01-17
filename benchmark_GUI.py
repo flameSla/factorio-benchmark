@@ -247,6 +247,37 @@ class MainFrame(wx.Frame):
         # self.list_ctrl_benchmark_results.AppendColumn("A", format=wx.LIST_FORMAT_LEFT, width=-1)
         sizer_13.Add(self.list_ctrl_benchmark_results, 10, wx.EXPAND, 0)
 
+        self.text_ctrl_selected_row = wx.TextCtrl(self.panel_5, wx.ID_ANY, "")
+        sizer_13.Add(self.text_ctrl_selected_row, 0, wx.EXPAND, 0)
+
+        self.sql_query = wx.Panel(self.Panel1, wx.ID_ANY)
+        self.Panel1.AddPage(self.sql_query, "Sql query")
+        sizer_16 = wx.BoxSizer(wx.VERTICAL)
+        sizer_17 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_16.Add(sizer_17, 1, wx.EXPAND, 0)
+        self.text_ctrl_tables = wx.TextCtrl(
+            self.sql_query, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY
+        )
+        self.text_ctrl_tables.SetMinSize((-1, -1))
+        sizer_17.Add(self.text_ctrl_tables, 1, wx.EXPAND, 0)
+        self.text_ctrl_views = wx.TextCtrl(
+            self.sql_query, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY
+        )
+        self.text_ctrl_views.SetMinSize((-1, -1))
+        sizer_17.Add(self.text_ctrl_views, 1, wx.EXPAND, 0)
+        sizer_18 = wx.BoxSizer(wx.VERTICAL)
+        sizer_16.Add(sizer_18, 1, wx.EXPAND, 0)
+        self.text_ctrl_sql = wx.TextCtrl(self.sql_query, wx.ID_ANY, "", style=wx.TE_MULTILINE)
+        sizer_18.Add(self.text_ctrl_sql, 10, wx.EXPAND, 0)
+        self.button_execute_sql_query = wx.Button(self.sql_query, wx.ID_ANY, "execute sql query")
+        sizer_18.Add(self.button_execute_sql_query, 0, 0, 0)
+        sizer_19 = wx.BoxSizer(wx.VERTICAL)
+        sizer_16.Add(sizer_19, 1, wx.EXPAND, 0)
+        self.text_ctrl_sql_query_result = wx.TextCtrl(
+            self.sql_query, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY
+        )
+        sizer_19.Add(self.text_ctrl_sql_query_result, 10, wx.EXPAND, 0)
+        self.sql_query.SetSizer(sizer_16)
         self.panel_5.SetSizer(sizer_13)
 
         self.panel_4.SetSizer(sizer_12)
@@ -285,6 +316,9 @@ class MainFrame(wx.Frame):
             self.list_ctrl_benchmark_results_SELECTED,
             self.list_ctrl_benchmark_results,
         )
+        self.Bind(
+            wx.EVT_BUTTON, self.button_execute_sql_query_OnButton, self.button_execute_sql_query
+        )
         # end wxGlade
         self.Bind(
             wx.EVT_LIST_COL_CLICK,
@@ -294,6 +328,13 @@ class MainFrame(wx.Frame):
         self.Bind(
             wx.EVT_LIST_COL_CLICK,
             self.list_ctrl_tests_COL_CLICK,
+            self.list_ctrl_tests,
+        )
+        # wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK
+        # wx.EVT_CONTEXT_MENU
+        self.Bind(
+            wx.EVT_CONTEXT_MENU,
+            self.list_ctrl_tests_OnRightClick,
             self.list_ctrl_tests,
         )
         self.Bind(
@@ -310,6 +351,7 @@ class MainFrame(wx.Frame):
 
         self.temporary_file = "temp_benchmark_GUI"
         self.out_printed_lines = 0
+        self.tests_selected_id = None
         self.column_widths = set()
         self.thread_to_run_test = None
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
@@ -327,6 +369,29 @@ class MainFrame(wx.Frame):
         self.update_benchmark_results("")
         self.update_tests_results_where = ""
         self.update_tests_results("")
+
+        self.get_tables_from_database()
+
+    def get_tables_from_database(self):
+        with sqlite3.connect("benchmark_result.db3") as db:
+            db.row_factory = sqlite3.Row
+            cur = db.cursor()
+            query = "SELECT name FROM sqlite_master WHERE type='table';"
+            self.text_ctrl_tables.Clear()
+            self.text_ctrl_tables.AppendText("Tables:\n")
+            cur.execute(query)
+            for row in cur:
+                for r in row:
+                    self.text_ctrl_tables.AppendText(r + "\n")
+            db.commit()
+            query = "SELECT name FROM sqlite_master WHERE type='view';"
+            self.text_ctrl_views.Clear()
+            self.text_ctrl_views.AppendText("Views:\n")
+            cur.execute(query)
+            for row in cur:
+                for r in row:
+                    self.text_ctrl_views.AppendText(r + "\n")
+            db.commit()
 
     def restore_settings(self):
         if os.path.exists(self.name_of_the_settings_file):
@@ -425,6 +490,37 @@ class MainFrame(wx.Frame):
         del AboutDialog
         event.Skip()
 
+    def button_execute_sql_query_OnButton(self, event):
+        query = ""
+        for i in range(self.text_ctrl_sql.GetNumberOfLines()):
+            query += self.text_ctrl_sql.GetLineText(i) + "\n"
+        if query:
+            err = ""
+            out = []
+            with sqlite3.connect("benchmark_result.db3") as db:
+                db.row_factory = sqlite3.Row
+                cur = db.cursor()
+                try:
+                    cur.execute(query)
+                    for row in cur:
+                        line = ""
+                        for r in row:
+                            line += str(r) + ";"
+                        out.append(line + "\n")
+                    db.commit()
+                except Exception as e:
+                    err = e
+
+                db.commit()
+            self.text_ctrl_sql_query_result.Clear()
+            if err:
+                self.text_ctrl_sql_query_result.AppendText(str(err))
+            else:
+                for line in out:
+                    self.text_ctrl_sql_query_result.AppendText(line)
+
+        event.Skip()
+
     def button_create_test_run_script_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         print("Event handler 'button_create_test_run_script_OnButton' not implemented!")
         event.Skip()
@@ -445,6 +541,13 @@ class MainFrame(wx.Frame):
             self.set_the_pathFileDialog_defaultDir = os.path.dirname(map)
         event.Skip()
 
+    def get_description(self, text_ctrl):
+        description = []
+        for i in range(text_ctrl.GetNumberOfLines()):
+            description.append(text_ctrl.GetLineText(i))
+        description = result_to_db.description_list_to_str(description)
+        return description
+
     def get_arguments_to_start_test(self):
         map_regex = self.text_regex.GetLineText(0)
         map_regex = map_regex if map_regex else None
@@ -459,10 +562,7 @@ class MainFrame(wx.Frame):
         disable_mods = self.checkbox_disable_mods.GetValue()
         high_priority = self.checkbox_high_priority.GetValue()
 
-        description = []
-        for i in range(self.text_Description.GetNumberOfLines()):
-            description.append(self.text_Description.GetLineText(i))
-        description = result_to_db.description_list_to_str(description)
+        description = self.get_description(self.text_Description)
 
         # maps
         filenames = []
@@ -669,6 +769,43 @@ class MainFrame(wx.Frame):
         self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText())
         event.Skip()
 
+    def list_ctrl_tests_OnRightClick(self, event):
+        # Show popupmenu at position
+        menu = wx.Menu()
+        item = menu.Append(wx.ID_ANY, "Change Description", "")
+        self.Bind(wx.EVT_MENU, self.change_description, item)
+        wx.Window.PopupMenu(self, menu)
+        event.Skip()
+
+    def change_description(self, event):
+        if self.tests_selected_id is not None:
+            ChangeDescriptionDialog = MyChangeDescription(self, wx.ID_ANY, "")
+            with sqlite3.connect("benchmark_result.db3") as db:
+                db.row_factory = sqlite3.Row
+                cur = db.cursor()
+                query = "select description from tests where id=?;"
+                cur.execute(query, [self.tests_selected_id])
+                for row in cur:
+                    for r in row:
+                        lines = result_to_db.description_str_to_list(r)
+                        ChangeDescriptionDialog.text_ctrl_description.Clear()
+                        for line in lines:
+                            ChangeDescriptionDialog.text_ctrl_description.AppendText(line + "\n")
+                db.commit()
+
+            if ChangeDescriptionDialog.ShowModal() == wx.ID_OK:
+                description = self.get_description(ChangeDescriptionDialog.text_ctrl_description)
+                with sqlite3.connect("benchmark_result.db3") as db:
+                    db.row_factory = sqlite3.Row
+                    cur = db.cursor()
+                    query = "update tests set description=? where id=?;"
+                    cur.execute(query, [description, self.tests_selected_id])
+                    db.commit()
+                    self.update_tests_results("")
+
+            del ChangeDescriptionDialog
+        event.Skip()
+
     def list_ctrl_tests_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
         list = self.list_ctrl_tests
         row = int(event.GetItem().GetText()) - 1
@@ -680,7 +817,9 @@ class MainFrame(wx.Frame):
                     where = " where id in ({})".format(text[1:-1])
                     self.update_benchmark_results_where = where
                     self.update_benchmark_results("")
-                    break
+                column_name = list.GetColumn(col).GetText()
+                if column_name and column_name == "id":
+                    self.tests_selected_id = int(text)
         event.Skip()
 
     def list_get_text_for_column(self, col_index, col):
@@ -763,11 +902,18 @@ class MainFrame(wx.Frame):
         if row >= 0:
             path = ""
             md5 = ""
+            selected_line = ""
             for col in range(cols):
                 if list.GetColumn(col).GetText() == "path":
                     path = list.GetItemText(row, col)
                 if list.GetColumn(col).GetText() == "md5":
                     md5 = list.GetItemText(row, col)
+
+                selected_line += " | " + list.GetItemText(row, col)
+
+            self.text_ctrl_selected_row.Clear()
+            self.text_ctrl_selected_row.AppendText(selected_line)
+
             if path and md5:
                 with sqlite3.connect("benchmark_result.db3") as db:
                     db.row_factory = sqlite3.Row
@@ -842,6 +988,52 @@ class MyAboutDialog(wx.Dialog):
 
 
 # end of class MyAboutDialog
+
+
+class MyChangeDescription(wx.Dialog):
+    def __init__(self, *args, **kwds):
+        # begin wxGlade: MyChangeDescription.__init__
+        kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE
+        wx.Dialog.__init__(self, *args, **kwds)
+        self.SetSize((400, 300))
+        self.SetTitle("Change the description")
+
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        sizer_1.Add(self.panel_1, 15, wx.EXPAND, 0)
+
+        sizer_3 = wx.StaticBoxSizer(
+            wx.StaticBox(self.panel_1, wx.ID_ANY, "Description"), wx.VERTICAL
+        )
+
+        self.text_ctrl_description = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE)
+        sizer_3.Add(self.text_ctrl_description, 15, wx.EXPAND, 0)
+
+        sizer_2 = wx.StdDialogButtonSizer()
+        sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
+
+        self.button_OK = wx.Button(self, wx.ID_OK, "")
+        self.button_OK.SetDefault()
+        sizer_2.AddButton(self.button_OK)
+
+        self.button_CANCEL = wx.Button(self, wx.ID_CANCEL, "")
+        sizer_2.AddButton(self.button_CANCEL)
+
+        sizer_2.Realize()
+
+        self.panel_1.SetSizer(sizer_3)
+
+        self.SetSizer(sizer_1)
+
+        self.SetAffirmativeId(self.button_OK.GetId())
+        self.SetEscapeId(self.button_CANCEL.GetId())
+
+        self.Layout()
+        # end wxGlade
+
+
+# end of class MyChangeDescription
 
 
 class BenchmarkGUI(wx.App):
