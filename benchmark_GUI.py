@@ -9,6 +9,8 @@ import sqlite3
 from datetime import datetime
 import json
 import os
+import sys
+import inspect
 import glob
 import shutil
 from contextlib import redirect_stdout, redirect_stderr
@@ -116,6 +118,16 @@ start_test(
     plot_results={plot_results},
 )
 """
+
+
+def get_script_dir(follow_symlinks=True):
+    if getattr(sys, "frozen", False):  # py2exe, PyInstaller, cx_Freeze
+        path = os.path.abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(get_script_dir)
+    if follow_symlinks:
+        path = os.path.realpath(path)
+    return os.path.dirname(path)
 
 
 class MainFrame(wx.Frame):
@@ -637,13 +649,23 @@ class MainFrame(wx.Frame):
         for k, v in args.items():
             args_str[k] = str(v)
 
-        script = test_run_script_0.format_map(args_str) + "\n"
-        script += test_run_script_1 + "\n"
-        script += test_run_script_2.format_map(args_str) + "\n"
-        with open(filename, "w") as f:
-            print(script, file=f)
+        saveFileDialog = wx.FileDialog(
+            self,
+            "Save the script",
+            defaultDir=get_script_dir(),
+            defaultFile=filename,
+            wildcard="python files (*.py)|*.py",
+            style=wx.FD_SAVE,
+        )
+        if saveFileDialog.ShowModal() == wx.ID_OK:
+            script = test_run_script_0.format_map(args_str) + "\n"
+            script += test_run_script_1 + "\n"
+            script += test_run_script_2.format_map(args_str) + "\n"
+            filename = saveFileDialog.GetPath()
+            with open(filename, "w") as f:
+                print(script, file=f)
 
-        self.text_out.AppendText(f"\nthe script was created: {filename}\n")
+            self.text_out.AppendText(f"\nthe script was created: {filename}\n")
 
         event.Skip()
 
