@@ -13,6 +13,7 @@ import sys
 import inspect
 import glob
 import shutil
+import locale
 from contextlib import redirect_stdout, redirect_stderr
 import threading
 import psutil
@@ -1243,49 +1244,37 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_save_report_OnButton(self, event):
-        start_of_the_report = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Report</title>
-</head>
-<body>
- """
-        end_of_report = """
-</body>
-</html>
-"""
-        report = r'<table border="1" width="100%" cellpadding="5">'
+        report = ""
         list = self.list_ctrl_benchmark_results
         cols = list.GetColumnCount()
         rows = list.GetItemCount()
 
-        table_row = "<tr>"
+        table_row = ""
         for col in range(cols):
             column_name = list.GetColumn(col).GetText()
-            table_row += f"<th>{column_name}</th>"
-        table_row += "</tr>"
-        report += table_row
+            table_row += f'"{column_name}";'
+        report += table_row[:-1] + "\n"
 
+        locale.setlocale(locale.LC_ALL, "")
         for row in range(rows):
-            table_row = "<tr>"
+            table_row = ""
             for col in range(cols):
-                table_row += f"<td>{list.GetItemText(row, col)}</td>"
-            table_row += "</tr>"
-            report += table_row
+                try:
+                    text = locale.format_string("%f;", float(list.GetItemText(row, col)))
+                except Exception:
+                    text = f'"{list.GetItemText(row, col)}";'
+                table_row += text
+            report += table_row[:-1] + "\n"
 
-        report += r"</table>"
         saveFileDialog = wx.FileDialog(
             self,
             "Save the report",
             defaultDir=get_script_dir(),
-            defaultFile="report.html",
-            wildcard="html (*.html)|*.html",
+            defaultFile="report.csv",
+            wildcard="csv (*.csv)|*.csv",
             style=wx.FD_SAVE,
         )
         if saveFileDialog.ShowModal() == wx.ID_OK:
-            report = start_of_the_report + report + end_of_report
             filename = saveFileDialog.GetPath()
             with open(filename, "w") as f:
                 print(report, file=f)
