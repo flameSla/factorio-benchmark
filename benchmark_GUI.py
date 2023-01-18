@@ -520,39 +520,58 @@ class MainFrame(wx.Frame):
     def restore_settings(self):
         if os.path.exists(self.name_of_the_settings_file):
             with open(self.name_of_the_settings_file, "r") as f:
-                settings = json.loads(f.read())
-                cols = ""
-                for col in settings["list_ctrl_tests"]:
-                    if settings["list_ctrl_tests"][col]:
-                        cols += col + ","
-                if len(cols) > 0:
-                    self.query_for_tests_results = "select {} from tests".format(cols[:-1])
-                cols = ""
-                for col in settings["list_ctrl_benchmark_results"]:
-                    if settings["list_ctrl_benchmark_results"][col]:
-                        cols += col + ","
-                if len(cols) > 0:
-                    self.query_for_benchmark_results = (
-                        "select {} from view_benchmark_result".format(cols[:-1])
-                    )
+                try:
+                    settings = json.loads(f.read())
+                except Exception:
+                    settings = {}
 
-                self.text_regex.Clear()
-                self.text_regex.AppendText(settings["text_regex"])
-                self.text_factorio_bin.Clear()
-                self.text_factorio_bin.AppendText(settings["text_factorio_bin"])
-                self.text_ctrl_cpus.Clear()
-                self.text_ctrl_cpus.AppendText(settings["text_ctrl_cpus"])
-                self.spin_runs.SetValue(int(settings["spin_runs"]))
-                self.spin_ticks.SetValue(int(settings["spin_ticks"]))
-                self.spin_skipticks.SetValue(int(settings["spin_skipticks"]))
-                self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
-                self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
-                self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
-                self.checkbox_plot_results.SetValue(settings["checkbox_plot_results"])
-                self.add_mapFileDialog_defaultDir = settings["add_mapFileDialog_defaultDir"]
-                self.set_the_pathFileDialog_defaultDir = settings[
-                    "set_the_pathFileDialog_defaultDir"
-                ]
+                if "list_ctrl_tests" in settings:
+                    cols = ""
+                    for col in settings["list_ctrl_tests"]:
+                        if settings["list_ctrl_tests"][col]:
+                            cols += col + ","
+                    if len(cols) > 0:
+                        self.query_for_tests_results = "select {} from tests".format(cols[:-1])
+                
+                if "list_ctrl_benchmark_results" in settings:
+                    cols = ""
+                    for col in settings["list_ctrl_benchmark_results"]:
+                        if settings["list_ctrl_benchmark_results"][col]:
+                            cols += col + ","
+                    if len(cols) > 0:
+                        self.query_for_benchmark_results = (
+                            "select {} from view_benchmark_result".format(cols[:-1])
+                        )
+                
+                if "text_regex" in settings:
+                    self.text_regex.Clear()
+                    self.text_regex.AppendText(settings["text_regex"])
+                if "text_factorio_bin" in settings:
+                    self.text_factorio_bin.Clear()
+                    self.text_factorio_bin.AppendText(settings["text_factorio_bin"])
+                if "text_ctrl_cpus" in settings:
+                    self.text_ctrl_cpus.Clear()
+                    self.text_ctrl_cpus.AppendText(settings["text_ctrl_cpus"])
+                if "spin_runs" in settings:
+                    self.spin_runs.SetValue(int(settings["spin_runs"]))
+                if "spin_ticks" in settings:
+                    self.spin_ticks.SetValue(int(settings["spin_ticks"]))
+                if "spin_skipticks" in settings:
+                    self.spin_skipticks.SetValue(int(settings["spin_skipticks"]))
+                if "checkbox_disable_mods" in settings:
+                    self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
+                if "checkbox_delete_temp_folder" in settings:
+                    self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
+                if "checkbox_high_priority" in settings:
+                    self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
+                if settings["checkbox_plot_results" in settings:
+                    self.checkbox_plot_results.SetValue(settings["checkbox_plot_results"])
+                if "add_mapFileDialog_defaultDir" in settings:
+                    self.add_mapFileDialog_defaultDir = settings["add_mapFileDialog_defaultDir"]
+                if "set_the_pathFileDialog_defaultDir" in settings:
+                    self.set_the_pathFileDialog_defaultDir = settings[
+                        "set_the_pathFileDialog_defaultDir"
+                    ]
 
     def get_list_settings(self, list):
         result = dict()
