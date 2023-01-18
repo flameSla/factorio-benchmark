@@ -28,6 +28,7 @@ if you have suggestions on how to improve the OSX situation please reach out.
    * Install the py2exe package `python.exe -m pip install py2exe`
    * `python.exe setup.py py2exe`
    * in the "dist" folder is `benchmark_GUI.exe`
+   * copy the "fmm" folder to the "dist" folder
 
 ## Usage
 
