@@ -231,6 +231,7 @@ def benchmark_folder(
     filenames: list[str] | None = None,
     high_priority: bool | None = None,
     cpu: int | None = None,
+    warming: bool = False,
 ) -> str:
     """Run benchmarks on all maps that match the given regular expression."""
     datetime_now = datetime.now()
@@ -240,20 +241,21 @@ def benchmark_folder(
     os.makedirs(os.path.join(folder, "saves"))
     os.makedirs(os.path.join(folder, "graphs"))
 
-    print("Warming up the system...")
-    run_benchmark(
-        os.path.join("saves", "factorio_maps", "big_bases", "flame10k.zip"),
-        folder,
-        ticks=100,
-        runs=1,
-        md5="",
-        save=False,
-        disable_mods=disable_mods,
-        factorio_bin=factorio_bin,
-        high_priority=high_priority,
-        cpu=cpu,
-    )
-    print("Finished warming up, starting the actual benchmark...")
+    if warming:
+        print("Warming up the system...")
+        run_benchmark(
+            os.path.join("saves", "factorio_maps", "big_bases", "flame10k.zip"),
+            folder,
+            ticks=100,
+            runs=1,
+            md5="",
+            save=False,
+            disable_mods=disable_mods,
+            factorio_bin=factorio_bin,
+            high_priority=high_priority,
+            cpu=cpu,
+        )
+        print("Finished warming up, starting the actual benchmark...")
 
     print()
     print("==================")
@@ -265,7 +267,7 @@ def benchmark_folder(
 
     # md5 calculation for files
     print("maps:")
-    filenames = [f for f in filenames if os.path.splitext(f)[1] == '.zip' and os.path.isfile(f)]
+    filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
     for filename in filenames:
         print(filename)
     print()
@@ -564,6 +566,13 @@ def init_parser() -> argparse.ArgumentParser:
         default=False,
         help=str("Save the benchmark result in the database. Database name 'benchmark_result.db3'"),
     )
+    parser.add_argument(
+        "-w",
+        "--warming",
+        action="store_true",
+        default=False,
+        help="Warming up the system.",
+    )
     return parser
 
 
@@ -598,6 +607,7 @@ if __name__ == "__main__":
         filenames=None,
         high_priority=args.high_priority,
         cpu=None,
+        warming=args.warming,
     )
 
     if args.plot_results:
