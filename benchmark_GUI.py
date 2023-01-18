@@ -817,10 +817,15 @@ class MainFrame(wx.Frame):
         grid = self.grid_maps
         for i in range(grid.GetNumberRows()):
             if grid.GetCellValue(i, 0):
+                # adding the ".zip" extension
                 if os.path.splitext(grid.GetCellValue(i, 0))[1] == "" and os.path.isfile(
                     grid.GetCellValue(i, 0) + ".zip"
                 ):
                     grid.SetCellValue(i, 0, grid.GetCellValue(i, 0) + ".zip")
+                # if not a file, we add #
+                if not os.path.isfile(grid.GetCellValue(i, 0)):
+                    if grid.GetCellValue(i, 0)[0] != "#":
+                        grid.SetCellValue(i, 0, "# " + grid.GetCellValue(i, 0))
                 filenames_dict[grid.GetCellValue(i, 0)] = grid.GetCellValue(i, 1)
 
         filenames = []
