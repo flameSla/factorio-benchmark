@@ -587,11 +587,6 @@ if __name__ == "__main__":
     if args.disable_mods:
         sync_mods(map="", disable_all=True)
 
-    # saves = list()
-    # saves.append(r"D:\Games\Factorio\saves\flame_Sla_10k.zip")
-    # saves.append(r"saves\flame10k.zip")
-    # saves.append(r"saves\factorio_maps\big_bases\flame10k.zip")
-    # saves.append(r"saves\factorio_maps\big_bases\steve10krail(2x5k).zip")
     folder = benchmark_folder(
         ticks=args.ticks,
         runs=args.repetitions,
