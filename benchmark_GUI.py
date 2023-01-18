@@ -1243,7 +1243,53 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_save_report_OnButton(self, event):
-        print("button_save_report_OnButton()")
+        start_of_the_report = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Report</title>
+</head>
+<body>
+ """
+        end_of_report = """
+</body>
+</html>
+"""
+        report = r'<table border="1" width="100%" cellpadding="5">'
+        list = self.list_ctrl_benchmark_results
+        cols = list.GetColumnCount()
+        rows = list.GetItemCount()
+
+        table_row = "<tr>"
+        for col in range(cols):
+            column_name = list.GetColumn(col).GetText()
+            table_row += f"<th>{column_name}</th>"
+        table_row += "</tr>"
+        report += table_row
+
+        for row in range(rows):
+            table_row = "<tr>"
+            for col in range(cols):
+                table_row += f"<td>{list.GetItemText(row, col)}</td>"
+            table_row += "</tr>"
+            report += table_row
+
+        report += r"</table>"
+        saveFileDialog = wx.FileDialog(
+            self,
+            "Save the report",
+            defaultDir=get_script_dir(),
+            defaultFile="report.html",
+            wildcard="html (*.html)|*.html",
+            style=wx.FD_SAVE,
+        )
+        if saveFileDialog.ShowModal() == wx.ID_OK:
+            report = start_of_the_report + report + end_of_report
+            filename = saveFileDialog.GetPath()
+            with open(filename, "w") as f:
+                print(report, file=f)
+
         event.Skip()
 
 
