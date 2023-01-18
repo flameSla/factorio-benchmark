@@ -930,16 +930,22 @@ class MainFrame(wx.Frame):
                         out_json = json.loads(f.read())
                         benchmark_result.extend(out_json["benchmark_result"])
 
+                    if plot_results:
+                        benchmarker.plot_benchmark_results(folder)
+                    elif delete_temp_folder:
+                        try:
+                            shutil.rmtree(folder)
+                        except OSError:
+                            pass
+
         out_json["benchmark_result"] = benchmark_result
         outfile_json = json.dumps(out_json, indent=4)
         out_path = os.path.join(folder, "out.json")
+        os.makedirs(folder, exist_ok=True)
         with open(out_path, "w") as outjson_file:
             outjson_file.write(outfile_json)
         result_to_db.result_to_db(folder, description=description)
-
-        if plot_results:
-            benchmarker.plot_benchmark_results(folder)
-        elif delete_temp_folder:
+        if delete_temp_folder:
             try:
                 shutil.rmtree(folder)
             except OSError:
