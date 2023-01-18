@@ -875,7 +875,9 @@ class MainFrame(wx.Frame):
 
     def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
         args = self.get_arguments_to_start_test()
-        if args["cpu_list"] is not None:
+        if args["filenames"] is None and args["map_regex"] is None:
+            self.text_out.AppendText("\n\nERROR!!! filenames is None AND map_regex is None\n\n")
+        elif args["cpu_list"] is not None:
             if isinstance(self.thread_to_run_test, threading.Thread):
                 if not self.thread_to_run_test.is_alive():
                     self.thread_to_run_test = None
