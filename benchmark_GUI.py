@@ -294,6 +294,9 @@ class MainFrame(wx.Frame):
         sizer_20.Add(label_4, 0, 0, 0)
         sizer_20.Add((20, 20), 10, wx.EXPAND, 0)
 
+        self.button_edit_file_list = wx.Button(self.panel_2, wx.ID_ANY, "Edit the file list")
+        sizer_20.Add(self.button_edit_file_list, 0, 0, 0)
+
         self.button_add_10_lines = wx.Button(self.panel_2, wx.ID_ANY, "Add 10 lines")
         sizer_20.Add(self.button_add_10_lines, 0, 0, 0)
 
@@ -351,13 +354,21 @@ class MainFrame(wx.Frame):
 
         sizer_12 = wx.BoxSizer(wx.VERTICAL)
 
+        sizer_22 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_12.Add(sizer_22, 1, wx.EXPAND, 0)
+
         self.button_tests_update = wx.Button(self.panel_4, wx.ID_ANY, "Update tests")
-        sizer_12.Add(self.button_tests_update, 0, 0, 0)
+        sizer_22.Add(self.button_tests_update, 0, 0, 0)
+
+        sizer_22.Add((20, 20), 10, 0, 0)
+
+        self.button_save_report = wx.Button(self.panel_4, wx.ID_ANY, "Save report")
+        sizer_22.Add(self.button_save_report, 0, 0, 0)
 
         self.list_ctrl_tests = wx.ListCtrl(
             self.panel_4, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES
         )
-        sizer_12.Add(self.list_ctrl_tests, 1, wx.EXPAND, 0)
+        sizer_12.Add(self.list_ctrl_tests, 10, wx.EXPAND, 0)
 
         self.panel_5 = wx.Panel(self.Results, wx.ID_ANY)
         sizer_11.Add(self.panel_5, 1, wx.EXPAND, 0)
@@ -478,6 +489,8 @@ class MainFrame(wx.Frame):
         )
         self.Bind(wx.EVT_BUTTON, self.button_add_10_lines_OnButton, self.button_add_10_lines)
         self.Bind(wx.EVT_BUTTON, self.button_load_script_OnButton, self.button_load_script)
+        self.Bind(wx.EVT_BUTTON, self.button_edit_file_list_OnButton, self.button_edit_file_list)
+        self.Bind(wx.EVT_BUTTON, self.button_save_report_OnButton, self.button_save_report)
 
         self.temporary_file = "temp_benchmark_GUI"
         self.out_printed_lines = 0
@@ -1223,6 +1236,14 @@ class MainFrame(wx.Frame):
                     self.update_tests_results_where = " where id in ({})".format(ids[:-1])
                     self.update_tests_results("")
 
+        event.Skip()
+
+    def button_edit_file_list_OnButton(self, event):
+        print("button_edit_file_list_OnButton()")
+        event.Skip()
+
+    def button_save_report_OnButton(self, event):
+        print("button_save_report_OnButton()")
         event.Skip()
 
 
