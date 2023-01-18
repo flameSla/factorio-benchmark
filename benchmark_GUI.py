@@ -219,7 +219,7 @@ class MainFrame(wx.Frame):
         label_2.SetMinSize((40, 16))
         sizer_4.Add(label_2, 0, 0, 0)
 
-        self.spin_ticks = wx.SpinCtrl(self.panel_1, wx.ID_ANY, "100", min=0, max=999999)
+        self.spin_ticks = wx.SpinCtrl(self.panel_1, wx.ID_ANY, "1000", min=0, max=999999)
         self.spin_ticks.SetMinSize((60, 23))
         sizer_4.Add(self.spin_ticks, 0, 0, 0)
 
@@ -532,7 +532,7 @@ class MainFrame(wx.Frame):
                             cols += col + ","
                     if len(cols) > 0:
                         self.query_for_tests_results = "select {} from tests".format(cols[:-1])
-                
+
                 if "list_ctrl_benchmark_results" in settings:
                     cols = ""
                     for col in settings["list_ctrl_benchmark_results"]:
@@ -542,7 +542,7 @@ class MainFrame(wx.Frame):
                         self.query_for_benchmark_results = (
                             "select {} from view_benchmark_result".format(cols[:-1])
                         )
-                
+
                 if "text_regex" in settings:
                     self.text_regex.Clear()
                     self.text_regex.AppendText(settings["text_regex"])
@@ -561,10 +561,12 @@ class MainFrame(wx.Frame):
                 if "checkbox_disable_mods" in settings:
                     self.checkbox_disable_mods.SetValue(settings["checkbox_disable_mods"])
                 if "checkbox_delete_temp_folder" in settings:
-                    self.checkbox_delete_temp_folder.SetValue(settings["checkbox_delete_temp_folder"])
+                    self.checkbox_delete_temp_folder.SetValue(
+                        settings["checkbox_delete_temp_folder"]
+                    )
                 if "checkbox_high_priority" in settings:
                     self.checkbox_high_priority.SetValue(settings["checkbox_high_priority"])
-                if settings["checkbox_plot_results" in settings:
+                if "checkbox_plot_results" in settings:
                     self.checkbox_plot_results.SetValue(settings["checkbox_plot_results"])
                 if "add_mapFileDialog_defaultDir" in settings:
                     self.add_mapFileDialog_defaultDir = settings["add_mapFileDialog_defaultDir"]
