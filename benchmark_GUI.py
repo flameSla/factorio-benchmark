@@ -987,7 +987,7 @@ class MainFrame(wx.Frame):
             grid.BeginBatch()
 
             index_of_new_line = 0
-            for i in range(grid.GetNumberRows() - 1, 0, -1):
+            for i in range(grid.GetNumberRows() - 1, -1, -1):
                 if grid.GetCellValue(i, 0):
                     index_of_new_line = i + 1
                     break
