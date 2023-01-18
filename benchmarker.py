@@ -478,7 +478,7 @@ def init_parser() -> argparse.ArgumentParser:
         "-u",
         "--update",
         action="store_true",
-        help="Update Factorio to the latest version before running benchmarks.",
+        help="Update Factorio to the latest version before running benchmarks (Linux only).",
     )
     parser.add_argument(
         "-r",
@@ -526,7 +526,7 @@ def init_parser() -> argparse.ArgumentParser:
         help=str(
             "if you want to install a specific version of factorio. you have to "
             "provide the complete download link to the headless version. don't "
-            "forget to update afterwards.",
+            "forget to update afterwards  (Linux only).",
         ),
     )
     parser.add_argument(
