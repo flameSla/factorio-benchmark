@@ -1,16 +1,22 @@
 This repository should serve the testing of different factorio optimisations problems.
-The goal is, to be able to test different maps quickly and be able to compare the results over time.  
+The goal is, to be able to test different maps quickly and be able to compare the results over time.
 
 # install
+
+1. Install Python 3.10
+2. Install packages:
+   * Windows: `python.exe -m pip install -r requirements.txt`
+   * Linux: read the documentation for your Linux distribution. The list of required packages is in the file requirements.txt
+
 
 ### Linux
 just run `benchmarker.py -u -m` to install the latest version of factorio and download some sample maps. This will also directly run the programm a first time.
 
-it needs python3. therefore depending on your distro you might have to do `python3 benchmarker.py -u -m` or `python benchmarker.py -u -m.
+it needs python3. therefore depending on your distro you might have to do `python3 benchmarker.py -u -m` or `python benchmarker.py -u -m`.
 ### Windows
-with WSL2:
+* with WSL2:
 You are using Linux therefore just use the linux install: `python benchmarker.py -u -m`
-without WSL2:
+* without WSL2:
 As there is no headless version available for windows, one has to install factorio by hand. to do this download the correct version from the website and unpack it into the main folder. so that `factorio/bin/x64/factorio` is the correct file. It would also be possible to add a link to a existing install into that possition but that isn't recommended due to mods.
 After that run `python benchmarker.py -m` to download some sample maps and run it a first time.
 
@@ -20,15 +26,15 @@ After that run `python benchmarker.py -m` to download some sample maps and run i
 if you have suggestions on how to improve the OSX situation please reach out.
 ## Usage
 
-when running it for the first time, or when updating factorio use the -u mode to get the latest stable version.
+when running it for the first time, or when updating factorio use the -u mode to get the latest stable version `(Linux only)`.
 
 if you only want to run part of the testsuite you can use the -r \<regex> option to only match certain files.
 
 ### Mod support
-Mod support is provided by fmm, a tool built bui Raiguard. it should in theory be possible to configure it via a config file. but I can't figure out how. Therefore it currently just has the default configuration. This requires the `factorio/player-data.json` to contain the username and token string(`service-username` `service-token` in the file). These lines are required to be able to download mods from the factorio server. The are added to the `player-data.json` if you load the game and log in. 
+Mod support is provided by `fmm`, a tool built bui Raiguard. it should in theory be possible to configure it via a config file. but I can't figure out how. Therefore it currently just has the default configuration. This requires the `factorio/player-data.json` to contain the username and token string(`service-username` `service-token` in the file). These lines are required to be able to download mods from the factorio server. The are added to the `player-data.json` if you load the game and log in. 
 
-For windows user: just start the factorio instance and log in. after that mod support works. 
-For linux user: as you can't log into the headless version, it's easiest to just coply the `player-data,json` from a working install.
+* For windows user: just start the factorio instance and log in. after that mod support works. 
+* For linux user: as you can't log into the headless version, it's easiest to just coply the `player-data,json` from a working install.
 For OSX and other(BSD etc): As I haven't yet cross compiled fmm you have to do so yourself, and then put it in the fmm folder and then do the same as windows user. 
 
 ### running benchmarks
@@ -61,11 +67,3 @@ options:
 ```
 
 ## Todo
-
-1) add mod support (to do things like miniloader testing.)
-2) Add some kind of hardware summary to each test run, so people can now what kind of hardware one has used for a given test result. (best to use lshw)
-2) move save files storage to different locations (they shouldn't be stored on github due to their size)
-this should be done by having a -i option to install the saves after download. This maybe should also allow for more custom inputs and or partial downloads.
-4) figure out how to get mularks maps downloaded via todo 1.
-
-5) add ways to customize runtime and amount of runs for, either each map or each test-group, This would be best done by adding a file to each group/test that contains the ticktime and amount of repetitions aswell as a description of what the test is designed to do.
