@@ -13,7 +13,7 @@ import atexit
 import requests
 import matplotlib.pyplot as plt
 import psutil
-from pathlib import Path
+import shutil
 import hashlib
 import result_to_db
 from typing import Any
@@ -77,14 +77,22 @@ def get_factorio_version(factorio_bin: str, full: bool = False) -> str:
     return result
 
 
-def sync_mods(map: str, disable_all: bool = False) -> None:
+def get_game_dir(factorio_bin: str) -> str:
+    game_dir = os.path.dirname(factorio_bin)
+    game_dir = os.path.split(game_dir)[0]  # to the catalog above
+    game_dir = os.path.split(game_dir)[0]  # to the catalog above
+    return game_dir
+
+
+def sync_mods(map: str, factorio_bin: str, disable_all: bool = False) -> None:
+    game_dir = get_game_dir(factorio_bin)
     fmm_name = {"linux": "fmm_linux", "win32": "fmm_win32.exe", "cygwin": "fmm_win32.exe"}[
         operatingsystem_codename
     ]
     if not disable_all:
-        set_mod_command = os.path.join("fmm", fmm_name) + f' --game-dir factorio sf "{map}"'
+        set_mod_command = os.path.join("fmm", fmm_name) + f' --game-dir "{game_dir}" sf "{map}"'
     else:
-        set_mod_command = os.path.join("fmm", fmm_name) + " --game-dir factorio disable"
+        set_mod_command = os.path.join("fmm", fmm_name) + f' --game-dir "{game_dir}" disable'
     # print(">>>> sync_mods()\t", set_mod_command)
     print(os.popen(set_mod_command).read())
 
@@ -130,11 +138,9 @@ def run_benchmark(
 ) -> None:
     """Run a benchmark on the given map with the specified number of ticks and
     runs."""
-    if factorio_bin is None:
-        factorio_bin = os.path.join("factorio", "bin", "x64", "factorio")
     # setting mods
     if not disable_mods:
-        sync_mods(map_)
+        sync_mods(map_, factorio_bin)
 
     print("Running benchmark...")
     # Get Version
@@ -240,6 +246,13 @@ def benchmark_folder(
     os.makedirs(folder)
     os.makedirs(os.path.join(folder, "saves"))
     os.makedirs(os.path.join(folder, "graphs"))
+
+    if factorio_bin is None:
+        factorio_bin = os.path.join("factorio", "bin", "x64", "factorio")
+
+    create_mods_dir(factorio_bin)
+    if disable_mods:
+        sync_mods(map="", factorio_bin=factorio_bin, disable_all=True)
 
     if warming:
         print("Warming up the system...")
@@ -456,18 +469,20 @@ def plot_benchmark_results(
         plt.close()
 
 
-def create_mods_dir() -> None:
-    os.makedirs(os.path.join("factorio", "mods"), exist_ok=True)
-    mod_list_json_file = os.path.join("factorio", "mods", "mod-list.json")
+def create_mods_dir(factorio_bin: str) -> None:
+    """creates a folder: 'factorio/mods'"""
+    """creates a file: 'factorio/mods/mod-list.json'"""
+    """copies the file from 'fmm/mod-settings.dat' to 'factorio/mods/mod-settings.dat'"""
+    game_dir = get_game_dir(factorio_bin)
+    os.makedirs(os.path.join(game_dir, "mods"), exist_ok=True)
+    mod_list_json_file = os.path.join(game_dir, "mods", "mod-list.json")
     if not os.path.exists(mod_list_json_file):
         with open(mod_list_json_file, "x") as file:
             file.write('{"mods":[{"name":"base","enabled":true}]}')
-    mod_settings_dat_file = os.path.join("factorio", "mods", "mod-settings.dat")
+    mod_settings_dat_file = os.path.join(game_dir, "mods", "mod-settings.dat")
     if not os.path.exists(mod_settings_dat_file):
         # copy the file 'mod-settings.dat'
-        source = Path(os.path.join("fmm", "mod-settings.dat"))
-        destination = Path(mod_settings_dat_file)
-        destination.write_bytes(source.read_bytes())
+        shutil.copy(os.path.join("fmm", "mod-settings.dat"), mod_settings_dat_file)
 
 
 def init_parser() -> argparse.ArgumentParser:
@@ -591,10 +606,6 @@ if __name__ == "__main__":
 
     if args.install_maps:
         install_maps(args.install_maps)
-
-    create_mods_dir()
-    if args.disable_mods:
-        sync_mods(map="", disable_all=True)
 
     folder = benchmark_folder(
         ticks=args.ticks,
