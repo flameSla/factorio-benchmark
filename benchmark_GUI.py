@@ -1244,6 +1244,7 @@ class MainFrame(wx.Frame):
         event.Skip()
 
     def button_save_report_OnButton(self, event):
+        # csv
         report = ""
         list = self.list_ctrl_benchmark_results
         cols = list.GetColumnCount()
