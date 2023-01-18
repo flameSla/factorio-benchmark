@@ -28,9 +28,6 @@ if you have suggestions on how to improve the OSX situation please reach out.
    * Install the PyInstaller package `python.exe -m pip install pyinstaller`
    * `pyinstaller --onefile --noupx benchmark_GUI.py`
 
-
-
-
 ## Usage
 
 When running it for the first time, or when updating factorio use the -u mode to get the latest stable version `(Linux only)`.
@@ -38,7 +35,7 @@ When running it for the first time, or when updating factorio use the -u mode to
 If you only want to run part of the testsuite you can use the -r \<regex> option to only match certain files.
 
 ### Running benchmarks
-To run clean benchmarks make sure that you have a done a fresh boot of your computer and have as few processes running as possible. (turn of any autostart programs you can.)
+(to-do)
 
 ### Options for the console script `benchmarker.py`:
 ```
