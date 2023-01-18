@@ -276,6 +276,8 @@ def benchmark_folder(
     print("==================")
     print()
     if filenames is None:
+        if map_regex is None:
+            raise Exception("filenames is None AND map_regex is None")
         filenames = glob.glob(os.path.join("saves", map_regex), recursive=True)
 
     # md5 calculation for files
