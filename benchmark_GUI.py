@@ -87,16 +87,22 @@ def start_test(
             out_json = json.loads(f.read())
             benchmark_result.extend(out_json["benchmark_result"])
 
+        if plot_results:
+            benchmarker.plot_benchmark_results(folder)
+        elif delete_temp_folder:
+            try:
+                shutil.rmtree(folder)
+            except OSError:
+                pass
+
     out_json["benchmark_result"] = benchmark_result
     outfile_json = json.dumps(out_json, indent=4)
     out_path = os.path.join(folder, "out.json")
+    os.makedirs(folder, exist_ok=True)
     with open(out_path, "w") as outjson_file:
         outjson_file.write(outfile_json)
     result_to_db.result_to_db(folder, description=description)
-
-    if plot_results:
-        benchmarker.plot_benchmark_results(folder)
-    elif delete_temp_folder:
+    if delete_temp_folder:
         try:
             shutil.rmtree(folder)
         except OSError:
@@ -113,7 +119,7 @@ start_test(
     filenames={filenames},
     high_priority={high_priority},
     cpu_list={cpu_list},
-    description='{description}',
+    description=r'{description}',
     delete_temp_folder={delete_temp_folder},
     plot_results={plot_results},
 )
@@ -1060,7 +1066,10 @@ class MainFrame(wx.Frame):
                 cur.execute(query, [self.tests_selected_id])
                 for row in cur:
                     for r in row:
-                        lines = result_to_db.description_str_to_list(r)
+                        try:
+                            lines = result_to_db.description_str_to_list(r)
+                        except Exception:
+                            lines = []
                         ChangeDescriptionDialog.text_ctrl_description.Clear()
                         for line in lines:
                             ChangeDescriptionDialog.text_ctrl_description.AppendText(line + "\n")
@@ -1105,7 +1114,10 @@ class MainFrame(wx.Frame):
             case str() as col:
                 if col[:5] == "JSON:":
                     # description
-                    return " ".join(line for line in json.loads(col[5:]))
+                    try:
+                        return " ".join(line for line in json.loads(col[5:]))
+                    except Exception:
+                        return "?"
                 else:
                     return col
             case _:
