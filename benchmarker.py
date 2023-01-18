@@ -19,6 +19,7 @@ import result_to_db
 from typing import Any
 import sys
 
+factorio_bin_global = ""  # for exit_handler()
 outheader = [
     "name",
     "timestamp",
@@ -61,7 +62,7 @@ outheader = [
 
 def exit_handler() -> None:
     print("Terminating grasfully!")
-    sync_mods("", True)
+    sync_mods(map="", factorio_bin=factorio_bin_global, disable_all=True)
     # I should also clean up potential other files
     # such as the lock file (factorio/.lock on linux)
     # also factorio.zip and maps.zip can be left over in rare cases and fail the reinstall.
@@ -125,14 +126,14 @@ def remove_character_from_string(s: str, char: str = "\r") -> str:
 
 
 def run_benchmark(
-    map_: str,
+    map_name: str,
     folder: str,
     ticks: int,
     runs: int,
     md5: str,
+    factorio_bin: str,
     save: bool = True,
     disable_mods: bool = True,
-    factorio_bin: str | None = None,
     high_priority: bool | None = None,
     cpu: int | None = None,
 ) -> None:
@@ -140,14 +141,14 @@ def run_benchmark(
     runs."""
     # setting mods
     if not disable_mods:
-        sync_mods(map_, factorio_bin)
+        sync_mods(map_name, factorio_bin)
 
     print("Running benchmark...")
     # Get Version
     version: str = get_factorio_version(factorio_bin, True)
     # psutil.Popen on Linux it doesn't work well with str()
     command: list[str] = [str(factorio_bin)]
-    command.extend(["--benchmark", str(map_)])
+    command.extend(["--benchmark", str(map_name)])
     command.extend(["--benchmark-ticks", str(ticks)])
     command.extend(["--benchmark-runs", str(runs)])
     command.extend(["--benchmark-verbose", "all"])
@@ -250,6 +251,9 @@ def benchmark_folder(
     if factorio_bin is None:
         factorio_bin = os.path.join("factorio", "bin", "x64", "factorio")
 
+    global factorio_bin_global  # for exit_handler()
+    factorio_bin_global = factorio_bin  # for exit_handler()
+
     create_mods_dir(factorio_bin)
     if disable_mods:
         sync_mods(map="", factorio_bin=factorio_bin, disable_all=True)
@@ -257,8 +261,8 @@ def benchmark_folder(
     if warming:
         print("Warming up the system...")
         run_benchmark(
-            os.path.join("saves", "factorio_maps", "big_bases", "flame10k.zip"),
-            folder,
+            map_name=os.path.join("saves", "factorio_maps", "big_bases", "flame10k.zip"),
+            folder=folder,
             ticks=100,
             runs=1,
             md5="",
@@ -306,8 +310,8 @@ def benchmark_folder(
     for filename in filenames:
         print(filename)
         run_benchmark(
-            filename,
-            folder,
+            map_name=filename,
+            folder=folder,
             ticks=ticks,
             runs=runs,
             md5=name_to_md5[filename],
