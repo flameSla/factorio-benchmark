@@ -25,8 +25,9 @@ if you have suggestions on how to improve the OSX situation please reach out.
    * For `linux` user: as you can't log into the headless version, it's easiest to just coply the `player-data,json` from a working install.
    * For `OSX` and other(BSD etc): As I haven't yet cross compiled fmm you have to do so yourself, and then put it in the fmm folder and then do the same as windows user. 
 7. `(Windows)` building benchmark_GUI.exe
-   * Install the PyInstaller package `python.exe -m pip install pyinstaller`
-   * `pyinstaller --onefile --noupx benchmark_GUI.py`
+   * Install the py2exe package `python.exe -m pip install py2exe`
+   * `python.exe setup.py py2exe`
+   * in the "dist" folder is `benchmark_GUI.exe`
 
 ## Usage
 
