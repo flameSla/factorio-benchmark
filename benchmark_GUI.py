@@ -118,7 +118,7 @@ start_test(
     disable_mods={disable_mods},
     skipticks={skipticks},
     map_regex=r'{map_regex}',
-    factorio_bin={factorio_bin},
+    factorio_bin=r'{factorio_bin}',
     filenames={filenames},
     high_priority={high_priority},
     cpu_list={cpu_list},
@@ -758,7 +758,9 @@ class MainFrame(wx.Frame):  # type: ignore
                         break
         event.Skip()
 
-    def button_create_test_run_script_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
+    def button_create_test_run_script_OnButton(
+        self, event: Any
+    ) -> None:  # wxGlade: MainFrame.<event_handler>
         args = self.get_arguments_to_start_test()
         datetime_now = datetime.now()
         filename = (
@@ -789,7 +791,9 @@ class MainFrame(wx.Frame):  # type: ignore
 
         event.Skip()
 
-    def button_set_the_path_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
+    def button_set_the_path_OnButton(
+        self, event: Any
+    ) -> None:  # wxGlade: MainFrame.<event_handler>
         set_the_path_FileDialog = wx.FileDialog(
             self,
             "Set the path",
@@ -1060,7 +1064,9 @@ class MainFrame(wx.Frame):  # type: ignore
             self.set_data_to_list(self.list_ctrl_tests, cur)
             db.commit()
 
-    def button_tests_update_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
+    def button_tests_update_OnButton(
+        self, event: Any
+    ) -> None:  # wxGlade: MainFrame.<event_handler>
         self.update_tests_results_where = ""
         self.update_tests_results("")
         event.Skip()
@@ -1192,7 +1198,9 @@ class MainFrame(wx.Frame):  # type: ignore
             self.set_data_to_list(self.list_ctrl_benchmark_results, cur)
             db.commit()
 
-    def button_update_benchmark_results_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
+    def button_update_benchmark_results_OnButton(
+        self, event: Any
+    ) -> None:  # wxGlade: MainFrame.<event_handler>
         self.update_benchmark_results_where = ""
         self.update_benchmark_results("")
         event.Skip()
@@ -1202,7 +1210,9 @@ class MainFrame(wx.Frame):  # type: ignore
         self.update_benchmark_results(self.list_ctrl_benchmark_results.GetColumn(col).GetText())
         event.Skip()
 
-    def list_ctrl_benchmark_results_SELECTED(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
+    def list_ctrl_benchmark_results_SELECTED(
+        self, event: Any
+    ) -> None:  # wxGlade: MainFrame.<event_handler>
         list = self.list_ctrl_benchmark_results
         selected_row = int(event.GetItem().GetText()) - 1
         cols = list.GetColumnCount()
