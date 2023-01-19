@@ -20,6 +20,8 @@ import psutil
 import benchmarker
 import result_to_db
 
+from typing import Any
+
 # begin wxGlade: dependencies
 import wx.adv
 import wx.grid
@@ -127,7 +129,7 @@ start_test(
 """
 
 
-def get_script_dir(follow_symlinks=True):
+def get_script_dir(follow_symlinks: bool = True) -> str:
     if getattr(sys, "frozen", False):  # py2exe, PyInstaller, cx_Freeze
         path = os.path.abspath(sys.executable)
     else:
@@ -137,13 +139,13 @@ def get_script_dir(follow_symlinks=True):
     return os.path.dirname(path)
 
 
-class MainFrame(wx.Frame):
-    def OnClose(self, event):
+class MainFrame(wx.Frame):  # type: ignore
+    def OnClose(self, event: Any) -> None:
         # print("__del__")
         self.save_settings()
         self.Destroy()
 
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwds):  # type: ignore
         # begin wxGlade: MainFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
@@ -496,7 +498,7 @@ class MainFrame(wx.Frame):
         self.temporary_file = "temp_benchmark_GUI"
         self.out_printed_lines = 0
         self.tests_selected_id = None
-        self.column_widths = set()
+        self.column_widths: set[Any] = set()
         self.thread_to_run_test = None
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
         self.query_for_tests_results = "select * from tests"
@@ -516,7 +518,7 @@ class MainFrame(wx.Frame):
 
         self.get_tables_from_database()
 
-    def get_tables_from_database(self):
+    def get_tables_from_database(self) -> None:
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
@@ -537,7 +539,7 @@ class MainFrame(wx.Frame):
                     self.text_ctrl_views.AppendText(r + "\n")
             db.commit()
 
-    def restore_settings(self):
+    def restore_settings(self) -> None:
         if os.path.exists(self.name_of_the_settings_file):
             with open(self.name_of_the_settings_file, "r") as f:
                 try:
@@ -595,14 +597,14 @@ class MainFrame(wx.Frame):
                         "set_the_pathFileDialog_defaultDir"
                     ]
 
-    def get_list_settings(self, list):
-        result = dict()
+    def get_list_settings(self, list: Any) -> dict[str, bool]:
+        result = {}
         for col in range(list.GetColumnCount())[1:]:
             result[list.GetColumn(col).GetText()] = True
         return result
 
-    def save_settings(self):
-        settings = dict()
+    def save_settings(self) -> None:
+        settings: dict[str, Any] = {}
         settings["list_ctrl_tests"] = self.get_list_settings(self.list_ctrl_tests)
         settings["list_ctrl_benchmark_results"] = self.get_list_settings(
             self.list_ctrl_benchmark_results
@@ -625,7 +627,7 @@ class MainFrame(wx.Frame):
         with open(self.name_of_the_settings_file, "w") as f:
             f.write(json.dumps(settings, indent=4))
 
-    def m_timer_OnTimer(self, event):
+    def m_timer_OnTimer(self, event: Any) -> None:
         with open(self.temporary_file, mode="r") as f:
             new_lines = []
             for line in f.readlines():
@@ -645,17 +647,17 @@ class MainFrame(wx.Frame):
                 self.m_timer.Stop()
         event.Skip()
 
-    def menu_EXIT(self, event):  # wxGlade: MainFrame.<event_handler>
+    def menu_EXIT(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         self.Close()
         event.Skip()
 
-    def menu_ABOUT(self, event):  # wxGlade: MainFrame.<event_handler>
-        AboutDialog = MyAboutDialog(self, wx.ID_ANY, "")
+    def menu_ABOUT(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
+        AboutDialog = MyAboutDialog(self, wx.ID_ANY, "")  # type: ignore
         AboutDialog.ShowModal()
         del AboutDialog
         event.Skip()
 
-    def button_execute_sql_query_OnButton(self, event):
+    def button_execute_sql_query_OnButton(self, event: Any) -> None:
         query = ""
         for i in range(self.text_ctrl_sql.GetNumberOfLines()):
             query += self.text_ctrl_sql.GetLineText(i) + "\n"
@@ -674,7 +676,7 @@ class MainFrame(wx.Frame):
                         out.append(line + "\n")
                     db.commit()
                 except Exception as e:
-                    err = e
+                    err = str(e)
 
                 db.commit()
             self.text_ctrl_sql_query_result.Clear()
@@ -686,7 +688,7 @@ class MainFrame(wx.Frame):
 
         event.Skip()
 
-    def button_load_script_OnButton(self, event):
+    def button_load_script_OnButton(self, event: Any) -> None:
         load_script_FileDialog = wx.FileDialog(
             self,
             "Load script",
@@ -756,7 +758,7 @@ class MainFrame(wx.Frame):
                         break
         event.Skip()
 
-    def button_create_test_run_script_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_create_test_run_script_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         args = self.get_arguments_to_start_test()
         datetime_now = datetime.now()
         filename = (
@@ -787,7 +789,7 @@ class MainFrame(wx.Frame):
 
         event.Skip()
 
-    def button_set_the_path_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_set_the_path_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         set_the_path_FileDialog = wx.FileDialog(
             self,
             "Set the path",
@@ -803,14 +805,13 @@ class MainFrame(wx.Frame):
             self.set_the_pathFileDialog_defaultDir = os.path.dirname(map)
         event.Skip()
 
-    def get_description(self, text_ctrl):
+    def get_description(self, text_ctrl: Any) -> str:
         description = []
         for i in range(text_ctrl.GetNumberOfLines()):
             description.append(text_ctrl.GetLineText(i))
-        description = result_to_db.description_list_to_str(description)
-        return description
+        return result_to_db.description_list_to_str(description)
 
-    def get_arguments_to_start_test(self):
+    def get_arguments_to_start_test(self) -> dict[str, Any]:
         map_regex = self.text_regex.GetLineText(0)
         map_regex = map_regex if map_regex else None
 
@@ -827,7 +828,7 @@ class MainFrame(wx.Frame):
         description = self.get_description(self.text_Description)
 
         # maps
-        filenames_dict = {}
+        filenames_dict: dict[str, str] = {}
         grid = self.grid_maps
         for i in range(grid.GetNumberRows()):
             if grid.GetCellValue(i, 0):
@@ -842,16 +843,16 @@ class MainFrame(wx.Frame):
                         grid.SetCellValue(i, 0, "# " + grid.GetCellValue(i, 0))
                 filenames_dict[grid.GetCellValue(i, 0)] = grid.GetCellValue(i, 1)
 
-        filenames = []
-        for map, enable in filenames_dict.items():
+        filenames: list[str] = []
+        for map_name, enable in filenames_dict.items():
             if enable == "1":
-                filenames.append(map)
+                filenames.append(map_name)
         filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
-        filenames = filenames if filenames else None
+        filenames = filenames if filenames else None  # type: ignore
         if filenames:
             map_regex = ""
 
-        cpu_list = []
+        cpu_list: list[int] = []
         for cpu in self.text_ctrl_cpus.GetLineText(0).split(","):
             try:
                 c = int(cpu)
@@ -867,12 +868,12 @@ class MainFrame(wx.Frame):
                 text += "'0'\n"
                 text += "'1,4,8,12'\n"
                 wx.MessageBox(text, "Error", wx.ICON_INFORMATION)
-                cpu_list = None
+                cpu_list = None  # type: ignore
 
         delete_temp_folder = self.checkbox_delete_temp_folder.GetValue()
         plot_results = self.checkbox_plot_results.GetValue()
 
-        res = {}
+        res: dict[str, Any] = {}
         res["ticks"] = ticks
         res["runs"] = runs
         res["disable_mods"] = disable_mods
@@ -892,7 +893,7 @@ class MainFrame(wx.Frame):
 
         return res
 
-    def button_start_test_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_start_test_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         args = self.get_arguments_to_start_test()
         if args["filenames"] is None and args["map_regex"] is None:
             self.text_out.AppendText("\n\nERROR!!! filenames is None AND map_regex is None\n\n")
@@ -913,24 +914,24 @@ class MainFrame(wx.Frame):
 
     def start_test(
         self,
-        ticks,
-        runs,
-        disable_mods,
-        skipticks,
-        map_regex,
-        factorio_bin,
-        filenames,
-        filenames_dict,
-        high_priority,
-        cpu_list,
-        description,
-        delete_temp_folder,
-        plot_results,
-        settings,
-    ):
+        ticks: int,
+        runs: int,
+        disable_mods: bool,
+        skipticks: int,
+        map_regex: str,
+        factorio_bin: str | None,
+        filenames: list[str] | None,
+        filenames_dict: dict[str, str],
+        high_priority: bool | None,
+        cpu_list: list[int],
+        description: str,
+        delete_temp_folder: bool,
+        plot_results: bool,
+        settings: str,
+    ) -> None:
         if os.path.exists(self.temporary_file):
             os.remove(self.temporary_file)
-        out_json = None
+        out_json: dict[str, Any] = {}
         benchmark_result = []
         if not high_priority:
             cpu_list = [0]
@@ -983,7 +984,7 @@ class MainFrame(wx.Frame):
         self.update_tests_results_where = ""
         self.update_tests_results("")
 
-    def button_regex_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_regex_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         filenames = glob.glob(os.path.join("saves", self.text_regex.GetLineText(0)), recursive=True)
         filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
 
@@ -999,7 +1000,7 @@ class MainFrame(wx.Frame):
         grid.EndBatch()
         event.Skip()
 
-    def button_add_map_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_add_map_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         add_mapFileDialog = wx.FileDialog(
             self,
             "Add map",
@@ -1028,7 +1029,7 @@ class MainFrame(wx.Frame):
             grid.EndBatch()
         event.Skip()
 
-    def button_reset_maps_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_reset_maps_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         grid = self.grid_maps
         grid.BeginBatch()
         grid.ClearGrid()
@@ -1037,14 +1038,14 @@ class MainFrame(wx.Frame):
         grid.EndBatch()
         event.Skip()
 
-    def button_add_10_lines_OnButton(self, event):
+    def button_add_10_lines_OnButton(self, event: Any) -> None:
         grid = self.grid_maps
         grid.BeginBatch()
         grid.InsertRows(pos=grid.GetNumberRows(), numRows=10)
         grid.EndBatch()
         event.Skip()
 
-    def update_tests_results(self, column_on_which_we_are_sorting):
+    def update_tests_results(self, column_on_which_we_are_sorting: str) -> None:
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
@@ -1059,17 +1060,17 @@ class MainFrame(wx.Frame):
             self.set_data_to_list(self.list_ctrl_tests, cur)
             db.commit()
 
-    def button_tests_update_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_tests_update_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         self.update_tests_results_where = ""
         self.update_tests_results("")
         event.Skip()
 
-    def list_ctrl_tests_COL_CLICK(self, event):
+    def list_ctrl_tests_COL_CLICK(self, event: Any) -> None:
         col = event.GetColumn()
         self.update_tests_results(self.list_ctrl_tests.GetColumn(col).GetText())
         event.Skip()
 
-    def list_ctrl_tests_OnRightClick(self, event):
+    def list_ctrl_tests_OnRightClick(self, event: Any) -> None:
         # Show popupmenu at position
         menu = wx.Menu()
         item = menu.Append(wx.ID_ANY, "Change Description", "")
@@ -1077,9 +1078,9 @@ class MainFrame(wx.Frame):
         wx.Window.PopupMenu(self, menu)
         event.Skip()
 
-    def change_description(self, event):
+    def change_description(self, event: Any) -> None:
         if self.tests_selected_id is not None:
-            ChangeDescriptionDialog = MyChangeDescription(self, wx.ID_ANY, "")
+            ChangeDescriptionDialog = MyChangeDescription(self, wx.ID_ANY, "")  # type: ignore
             with sqlite3.connect("benchmark_result.db3") as db:
                 db.row_factory = sqlite3.Row
                 cur = db.cursor()
@@ -1109,7 +1110,7 @@ class MainFrame(wx.Frame):
             del ChangeDescriptionDialog
         event.Skip()
 
-    def list_ctrl_tests_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
+    def list_ctrl_tests_SELECTED(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         list = self.list_ctrl_tests
         row = int(event.GetItem().GetText()) - 1
         cols = list.GetColumnCount()
@@ -1125,7 +1126,7 @@ class MainFrame(wx.Frame):
                     self.tests_selected_id = int(text)
         event.Skip()
 
-    def list_get_text_for_column(self, col_index, col):
+    def list_get_text_for_column(self, col_index: int, col: Any) -> str:
         if col_index == 2:
             d = datetime.fromtimestamp(col)
             return d.isoformat(" ", "seconds")
@@ -1144,7 +1145,7 @@ class MainFrame(wx.Frame):
             case _:
                 return str(col)
 
-    def set_data_to_list(self, list, cur):
+    def set_data_to_list(self, list: Any, cur: Any) -> None:
         list.DeleteAllItems()
         for n, row in enumerate(cur, start=0):
             if list not in self.column_widths:
@@ -1176,7 +1177,7 @@ class MainFrame(wx.Frame):
                     list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
                 self.column_widths.add(list)
 
-    def update_benchmark_results(self, column_on_which_we_are_sorting):
+    def update_benchmark_results(self, column_on_which_we_are_sorting: str) -> None:
         with sqlite3.connect("benchmark_result.db3") as db:
             db.row_factory = sqlite3.Row
             cur = db.cursor()
@@ -1191,31 +1192,31 @@ class MainFrame(wx.Frame):
             self.set_data_to_list(self.list_ctrl_benchmark_results, cur)
             db.commit()
 
-    def button_update_benchmark_results_OnButton(self, event):  # wxGlade: MainFrame.<event_handler>
+    def button_update_benchmark_results_OnButton(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         self.update_benchmark_results_where = ""
         self.update_benchmark_results("")
         event.Skip()
 
-    def list_ctrl_benchmark_results_COL_CLICK(self, event):
+    def list_ctrl_benchmark_results_COL_CLICK(self, event: Any) -> None:
         col = event.GetColumn()
         self.update_benchmark_results(self.list_ctrl_benchmark_results.GetColumn(col).GetText())
         event.Skip()
 
-    def list_ctrl_benchmark_results_SELECTED(self, event):  # wxGlade: MainFrame.<event_handler>
+    def list_ctrl_benchmark_results_SELECTED(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
         list = self.list_ctrl_benchmark_results
-        row = int(event.GetItem().GetText()) - 1
+        selected_row = int(event.GetItem().GetText()) - 1
         cols = list.GetColumnCount()
-        if row >= 0:
+        if selected_row >= 0:
             path = ""
             md5 = ""
             selected_line = ""
             for col in range(cols):
                 if list.GetColumn(col).GetText() == "path":
-                    path = list.GetItemText(row, col)
+                    path = list.GetItemText(selected_row, col)
                 if list.GetColumn(col).GetText() == "md5":
-                    md5 = list.GetItemText(row, col)
+                    md5 = list.GetItemText(selected_row, col)
 
-                selected_line += " | " + list.GetItemText(row, col)
+                selected_line += " | " + list.GetItemText(selected_row, col)
 
             self.text_ctrl_selected_row.Clear()
             self.text_ctrl_selected_row.AppendText(selected_line)
@@ -1231,19 +1232,19 @@ class MainFrame(wx.Frame):
                     cur.execute(query)
                     ids = ""
                     for row in cur:
-                        for i in row:
-                            ids += str(i) + ","
+                        for id in row:
+                            ids += str(id) + ","
                     db.commit()
                     self.update_tests_results_where = " where id in ({})".format(ids[:-1])
                     self.update_tests_results("")
 
         event.Skip()
 
-    def button_edit_file_list_OnButton(self, event):
+    def button_edit_file_list_OnButton(self, event: Any) -> None:
         print("button_edit_file_list_OnButton()")
         event.Skip()
 
-    def button_save_report_OnButton(self, event):
+    def button_save_report_OnButton(self, event: Any) -> None:
         # csv
         report = ""
         list = self.list_ctrl_benchmark_results
@@ -1286,8 +1287,8 @@ class MainFrame(wx.Frame):
 # end of class MainFrame
 
 
-class MyAboutDialog(wx.Dialog):
-    def __init__(self, *args, **kwds):
+class MyAboutDialog(wx.Dialog):  # type: ignore
+    def __init__(self, *args, **kwds):  # type: ignore
         # begin wxGlade: MyAboutDialog.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
@@ -1339,8 +1340,8 @@ class MyAboutDialog(wx.Dialog):
 # end of class MyAboutDialog
 
 
-class MyChangeDescription(wx.Dialog):
-    def __init__(self, *args, **kwds):
+class MyChangeDescription(wx.Dialog):  # type: ignore
+    def __init__(self, *args, **kwds):  # type: ignore
         # begin wxGlade: MyChangeDescription.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
@@ -1385,9 +1386,9 @@ class MyChangeDescription(wx.Dialog):
 # end of class MyChangeDescription
 
 
-class BenchmarkGUI(wx.App):
-    def OnInit(self):
-        self.frame = MainFrame(None, wx.ID_ANY, "")
+class BenchmarkGUI(wx.App):  # type: ignore
+    def OnInit(self) -> bool:
+        self.frame = MainFrame(None, wx.ID_ANY, "")  # type: ignore
         self.SetTopWindow(self.frame)
         self.frame.Show()
         return True
