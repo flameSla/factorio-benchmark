@@ -46,7 +46,7 @@ Options:
    * Windows: I strongly recommend enabling the option
 2. `Plot results` pictures with graphs are located in a folder of the form "benchmark_on_2023-01-19_23_40_33"
 
-Installation benchmark_GUI.py
+Installation benchmark_GUI.py **(Only for Windows!)**. Packages on Linux cannot be installed like this!
 
 https://user-images.githubusercontent.com/39356103/213429436-0566d0cf-48c9-4725-86bf-fb0acc6709af.mp4
 
