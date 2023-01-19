@@ -39,6 +39,8 @@ If you only want to run part of the testsuite you can use the -r \<regex> option
 ### Running benchmarks
 (to-do)
 
+![alt text](Video/Installation benchmark_GUI.py.mp4 "Installation benchmark_GUI.py")
+
 ### Options for the console script `benchmarker.py`:
 ```
   -h, --help            show this help message and exit
