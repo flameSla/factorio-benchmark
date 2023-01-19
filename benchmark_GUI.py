@@ -749,8 +749,8 @@ class MainFrame(wx.Frame):  # type: ignore
                         filenames = settings["filenames_dict"]
                         number_rows = len(filenames) + 10
                         grid.InsertRows(pos=0, numRows=number_rows)
-                        for i, (map, enable) in enumerate(filenames.items()):
-                            grid.SetCellValue(i, 0, map)
+                        for i, (map_name, enable) in enumerate(filenames.items()):
+                            grid.SetCellValue(i, 0, map_name)
                             grid.SetCellValue(i, 1, enable)
                         grid.EndBatch()
 
@@ -803,10 +803,10 @@ class MainFrame(wx.Frame):  # type: ignore
             style=wx.FD_OPEN,
         )
         if set_the_path_FileDialog.ShowModal() == wx.ID_OK:
-            map = set_the_path_FileDialog.GetPath()
+            map_name = set_the_path_FileDialog.GetPath()
             self.text_factorio_bin.Clear()
-            self.text_factorio_bin.AppendText(map)
-            self.set_the_pathFileDialog_defaultDir = os.path.dirname(map)
+            self.text_factorio_bin.AppendText(map_name)
+            self.set_the_pathFileDialog_defaultDir = os.path.dirname(map_name)
         event.Skip()
 
     def get_description(self, text_ctrl: Any) -> str:
@@ -1025,10 +1025,10 @@ class MainFrame(wx.Frame):  # type: ignore
                     break
 
             grid.InsertRows(pos=grid.GetNumberRows(), numRows=len(maps))
-            for i, map in enumerate(maps, start=index_of_new_line):
-                grid.SetCellValue(i, 0, map)
+            for i, map_name in enumerate(maps, start=index_of_new_line):
+                grid.SetCellValue(i, 0, map_name)
                 grid.SetCellValue(i, 1, "1")
-                self.add_mapFileDialog_defaultDir = os.path.dirname(map)
+                self.add_mapFileDialog_defaultDir = os.path.dirname(map_name)
 
             grid.EndBatch()
         event.Skip()
@@ -1251,7 +1251,67 @@ class MainFrame(wx.Frame):  # type: ignore
         event.Skip()
 
     def button_edit_file_list_OnButton(self, event: Any) -> None:
-        print("button_edit_file_list_OnButton()")
+        EditingMapsDialog = MyEditingMaps(self, wx.ID_ANY, "")  # type: ignore
+        # get maps
+        grid = self.grid_maps
+        for i in range(grid.GetNumberRows()):
+            if grid.GetCellValue(i, 0):
+                # adding the ".zip" extension
+                if os.path.splitext(grid.GetCellValue(i, 0))[1] == "" and os.path.isfile(
+                    grid.GetCellValue(i, 0) + ".zip"
+                ):
+                    grid.SetCellValue(i, 0, grid.GetCellValue(i, 0) + ".zip")
+                # if not a file, we add #
+                if not os.path.isfile(grid.GetCellValue(i, 0)):
+                    if grid.GetCellValue(i, 0)[0] != "#":
+                        grid.SetCellValue(i, 0, "# " + grid.GetCellValue(i, 0))
+                EditingMapsDialog.text_ctrl_maps.AppendText(
+                    f"{grid.GetCellValue(i, 1)};{grid.GetCellValue(i, 0)}\n"
+                )
+
+        if EditingMapsDialog.ShowModal() == wx.ID_OK:
+            ctrl = EditingMapsDialog.text_ctrl_maps
+            rows = ctrl.GetNumberOfLines()
+            lines = []
+            for row in range(rows):
+                text = ctrl.GetLineText(row).replace("\n", "")
+                if text:
+                    lines.append(tuple(text.split(";")))
+
+            grid = self.grid_maps
+            grid.BeginBatch()
+            grid.ClearGrid()
+            grid.DeleteRows(0, grid.GetNumberRows())
+            number_rows = len(lines) + 10
+            grid.InsertRows(pos=0, numRows=number_rows)
+            for i, line in enumerate(lines):
+                try:
+                    if int(line[0]) == 1:
+                        grid.SetCellValue(i, 0, line[1])
+                        grid.SetCellValue(i, 1, "1")
+                    else:
+                        grid.SetCellValue(i, 0, line[1])
+                        grid.SetCellValue(i, 1, "0")
+                except Exception:
+                    grid.SetCellValue(i, 0, ";".join(a for a in line))
+                    grid.SetCellValue(i, 1, "0")
+            grid.EndBatch()
+
+            # check: does such a file exist?
+            grid = self.grid_maps
+            for i in range(grid.GetNumberRows()):
+                if grid.GetCellValue(i, 0):
+                    # adding the ".zip" extension
+                    if os.path.splitext(grid.GetCellValue(i, 0))[1] == "" and os.path.isfile(
+                        grid.GetCellValue(i, 0) + ".zip"
+                    ):
+                        grid.SetCellValue(i, 0, grid.GetCellValue(i, 0) + ".zip")
+                    # if not a file, we add #
+                    if not os.path.isfile(grid.GetCellValue(i, 0)):
+                        if grid.GetCellValue(i, 0)[0] != "#":
+                            grid.SetCellValue(i, 0, "# " + grid.GetCellValue(i, 0))
+
+        del EditingMapsDialog
         event.Skip()
 
     def button_save_report_OnButton(self, event: Any) -> None:
@@ -1394,6 +1454,44 @@ class MyChangeDescription(wx.Dialog):  # type: ignore
 
 
 # end of class MyChangeDescription
+
+
+class MyEditingMaps(wx.Dialog):  # type: ignore
+    def __init__(self, *args, **kwds):  # type: ignore
+        # begin wxGlade: MyEditingMaps.__init__
+        kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE
+        wx.Dialog.__init__(self, *args, **kwds)
+        self.SetTitle("Editing maps")
+
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+
+        self.text_ctrl_maps = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE)
+        self.text_ctrl_maps.SetMinSize((1100, 500))
+        sizer_1.Add(self.text_ctrl_maps, 0, 0, 0)
+
+        sizer_2 = wx.StdDialogButtonSizer()
+        sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
+
+        self.button_OK = wx.Button(self, wx.ID_OK, "")
+        self.button_OK.SetDefault()
+        sizer_2.AddButton(self.button_OK)
+
+        self.button_CANCEL = wx.Button(self, wx.ID_CANCEL, "")
+        sizer_2.AddButton(self.button_CANCEL)
+
+        sizer_2.Realize()
+
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+
+        self.SetAffirmativeId(self.button_OK.GetId())
+        self.SetEscapeId(self.button_CANCEL.GetId())
+
+        self.Layout()
+        # end wxGlade
+
+
+# end of class MyEditingMaps
 
 
 class BenchmarkGUI(wx.App):  # type: ignore
