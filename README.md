@@ -37,9 +37,8 @@ When running it for the first time, or when updating factorio use the -u mode to
 If you only want to run part of the testsuite you can use the -r \<regex> option to only match certain files.
 
 ### Running benchmarks
-(to-do)
 
-![alt text](Video/Installation benchmark_GUI.py.mp4 "Installation benchmark_GUI.py")
+https://user-images.githubusercontent.com/39356103/213429436-0566d0cf-48c9-4725-86bf-fb0acc6709af.mp4
 
 ### Options for the console script `benchmarker.py`:
 ```
