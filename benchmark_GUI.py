@@ -105,7 +105,7 @@ def start_test(
     with open(out_path, "w") as outjson_file:
         outjson_file.write(outfile_json)
     result_to_db.result_to_db(folder, description=description)
-    if delete_temp_folder:
+    if not plot_results and delete_temp_folder:
         try:
             shutil.rmtree(folder)
         except OSError:
@@ -118,7 +118,7 @@ start_test(
     disable_mods={disable_mods},
     skipticks={skipticks},
     map_regex=r'{map_regex}',
-    factorio_bin=r'{factorio_bin}',
+    factorio_bin={factorio_bin},
     filenames={filenames},
     high_priority={high_priority},
     cpu_list={cpu_list},
@@ -782,6 +782,10 @@ class MainFrame(wx.Frame):  # type: ignore
         if saveFileDialog.ShowModal() == wx.ID_OK:
             script = test_run_script_0.format_map(args_str) + "\n"
             script += test_run_script_1 + "\n"
+            if args["factorio_bin"] is None:
+                args_str["factorio_bin"] = "None"
+            else:
+                args_str["factorio_bin"] = "r'{}'".format(args["factorio_bin"])
             script += test_run_script_2.format_map(args_str) + "\n"
             filename = saveFileDialog.GetPath()
             with open(filename, "w") as f:
@@ -977,7 +981,7 @@ class MainFrame(wx.Frame):  # type: ignore
         with open(out_path, "w") as outjson_file:
             outjson_file.write(outfile_json)
         result_to_db.result_to_db(folder, description=description)
-        if delete_temp_folder:
+        if not plot_results and delete_temp_folder:
             try:
                 shutil.rmtree(folder)
             except OSError:
