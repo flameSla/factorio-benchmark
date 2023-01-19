@@ -38,7 +38,11 @@ If you only want to run part of the testsuite you can use the -r \<regex> option
 
 ### Running benchmarks
 
+Installation benchmark_GUI.py
+
 https://user-images.githubusercontent.com/39356103/213429436-0566d0cf-48c9-4725-86bf-fb0acc6709af.mp4
+
+
 
 ### Options for the console script `benchmarker.py`:
 ```
