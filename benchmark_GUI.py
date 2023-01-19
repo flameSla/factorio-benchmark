@@ -503,8 +503,8 @@ class MainFrame(wx.Frame):  # type: ignore
         self.name_of_the_settings_file = "benchmark_GUI_settings.json"
         self.query_for_tests_results = "select * from tests"
         self.query_for_benchmark_results = "select * from view_benchmark_result"
-        self.add_mapFileDialog_defaultDir = ""
-        self.set_the_pathFileDialog_defaultDir = ""
+        self.add_mapFileDialog_defaultDir = get_script_dir()
+        self.set_the_pathFileDialog_defaultDir = get_script_dir()
 
         self.restore_settings()
         # creating a database
