@@ -37,7 +37,8 @@ When running it for the first time, or when updating factorio use the -u mode to
 If you only want to run part of the testsuite you can use the -r \<regex> option to only match certain files.
 
 ### Running benchmarks
-The benchmark results are stored in the database **benchmark_result.db3** (sqlite). The script for creating the database is in the file **result_to_db.py**
+To start the program, run `python.exe benchmark_GUI.py`.
+The benchmark results are stored in the database **benchmark_result.db3** (sqlite).
 
 Options:
 
@@ -46,7 +47,7 @@ Options:
    * Windows: I strongly recommend enabling the option
 2. `Plot results` pictures with graphs are located in a folder of the form "benchmark_on_2023-01-19_23_40_33"
 
-Installation benchmark_GUI.py **(Only for Windows!)**. Packages on Linux cannot be installed like this!
+Installation benchmark_GUI.py **(Attention! Only for Windows!. Packages on Linux cannot be installed like this!)**
 
 https://user-images.githubusercontent.com/39356103/213429436-0566d0cf-48c9-4725-86bf-fb0acc6709af.mp4
 
