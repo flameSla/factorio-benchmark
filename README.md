@@ -52,15 +52,16 @@ Options:
 
 Installation benchmark_GUI.py **(Attention! Only for Windows!. Packages on Linux cannot be installed like this!)**
 
-https://user-images.githubusercontent.com/39356103/213429436-0566d0cf-48c9-4725-86bf-fb0acc6709af.mp4
+https://user-images.githubusercontent.com/39356103/213622874-71d4215a-5dd5-4323-97f3-6549b7fea55b.mp4
 
 Running benchmarks
 
-1
+https://user-images.githubusercontent.com/39356103/213627628-9ba1eca0-08b1-4f00-9d2d-95d41c1ac24c.mp4
 
 Edit the file list
 
-2
+https://user-images.githubusercontent.com/39356103/213622962-987fc33c-5c08-41c1-a609-06984097c3cf.mp4
+
 
 ### Options for the console script `benchmarker.py`:
 ```
