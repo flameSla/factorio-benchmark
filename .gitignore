@@ -1,4 +1,5 @@
 temp_benchmark_GUI
+test_*.py
 *.bak
 *.json
 *.db3
