@@ -752,6 +752,19 @@ class MainFrame(wx.Frame):  # type: ignore
                         for i, (map_name, enable) in enumerate(filenames.items()):
                             grid.SetCellValue(i, 0, map_name)
                             grid.SetCellValue(i, 1, enable)
+
+                        # check: does such a file exist?
+                        for i in range(grid.GetNumberRows()):
+                            if grid.GetCellValue(i, 0):
+                                # adding the ".zip" extension
+                                if os.path.splitext(grid.GetCellValue(i, 0))[
+                                    1
+                                ] == "" and os.path.isfile(grid.GetCellValue(i, 0) + ".zip"):
+                                    grid.SetCellValue(i, 0, grid.GetCellValue(i, 0) + ".zip")
+                                # if not a file, we add #
+                                if not os.path.isfile(grid.GetCellValue(i, 0)):
+                                    if grid.GetCellValue(i, 0)[0] != "#":
+                                        grid.SetCellValue(i, 0, "# " + grid.GetCellValue(i, 0))
                         grid.EndBatch()
 
                         self.text_out.AppendText(f"\nScript '{script}' loaded\n")
