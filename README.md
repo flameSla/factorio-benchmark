@@ -46,11 +46,11 @@ Options:
    * Linux: requires 'sudo', therefore, it is not recommended to use
    * Windows: I strongly recommend enabling the option
 2. `Plot results` pictures with graphs are located in a folder of the form "benchmark_on_2023-01-19_23_40_33"
-3. `Cpus` Allows you to limit the number of cores for the **factorio** process:
+3. `Cpus` Allows you to limit the number of cores for the **factorio** process (works only when **High priority=On**):
    * **0** -> **factorio** - uses all cores
    * **2,4,0** -> 3 benchmarks will be made: 2 core limit, 4 core limit and no core limit
 
-Installation benchmark_GUI.py **(Attention! Only for Windows!. Packages on Linux cannot be installed like this!)**
+Installation benchmark_GUI.py <p align="center">**(Attention! Only for Windows!. Packages on Linux cannot be installed like this!)**</p>
 
 https://user-images.githubusercontent.com/39356103/213622874-71d4215a-5dd5-4323-97f3-6549b7fea55b.mp4
 
