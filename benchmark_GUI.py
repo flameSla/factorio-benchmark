@@ -567,6 +567,7 @@ class MainFrame(wx.Frame):  # type: ignore
         self.Bind(wx.EVT_BUTTON, self.button_save_report_OnButton, self.button_save_report)
 
         self.temporary_file = "temp_benchmark_GUI"
+        self.folder = ""
         self.out_printed_lines = 0
         self.tests_selected_id = None
         self.column_widths: set[Any] = set()
@@ -721,6 +722,10 @@ class MainFrame(wx.Frame):  # type: ignore
                 self.thread_to_run_test = None
                 self.out_printed_lines = 0
                 self.m_timer.Stop()
+
+                if self.folder:
+                    benchmarker.plot_benchmark_results(self.folder)
+
         event.Skip()
 
     def menu_EXIT(self, event: Any) -> None:  # wxGlade: MainFrame.<event_handler>
@@ -1032,6 +1037,7 @@ class MainFrame(wx.Frame):  # type: ignore
             os.remove(self.temporary_file)
         out_json: dict[str, Any] = {}
         benchmark_result = []
+        self.folder = ""
         if not high_priority:
             cpu_list = [0]
         for cpu in cpu_list:
@@ -1058,7 +1064,8 @@ class MainFrame(wx.Frame):  # type: ignore
                         benchmark_result.extend(out_json["benchmark_result"])
 
                     if plot_results:
-                        benchmarker.plot_benchmark_results(folder)
+                        self.folder = folder
+                        # benchmarker.plot_benchmark_results(folder)
                     elif delete_temp_folder:
                         try:
                             shutil.rmtree(folder)
