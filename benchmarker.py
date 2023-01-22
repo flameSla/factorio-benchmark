@@ -450,7 +450,7 @@ def plot_benchmark_results(
     # graph names - must contain the number of processors
     for i in range(len(benchmark_result)):
         benchmark_result[i]["name"] += " CPUx{0:02}".format(benchmark_result[i]["info"]["cpu"])
-    print(benchmark_result)
+    # print(benchmark_result)
 
     # Create the output subfolder if it does not exist
     if out_folder is None:
