@@ -88,6 +88,7 @@ import threading
 import psutil
 import benchmarker
 import result_to_db
+import matplotlib
 
 from typing import Any
 
@@ -724,6 +725,7 @@ class MainFrame(wx.Frame):  # type: ignore
                 self.m_timer.Stop()
 
                 if self.folder:
+                    matplotlib.use('wxAgg')
                     benchmarker.plot_benchmark_results(self.folder)
 
         event.Skip()
