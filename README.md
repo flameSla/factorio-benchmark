@@ -50,7 +50,7 @@ Options:
    * **0** -> **factorio** - uses all cores
    * **2,4,0** -> 3 benchmarks will be made: 2 core limit, 4 core limit and no core limit
 
-Installation benchmark_GUI.py <p align="center">**(Attention! Only for Windows!. Packages on Linux cannot be installed like this!)**</p>
+Installation benchmark_GUI.py <p align="center">**Attention! Only for Windows!. Packages on Linux cannot be installed like this!**</p>
 
 https://user-images.githubusercontent.com/39356103/213622874-71d4215a-5dd5-4323-97f3-6549b7fea55b.mp4
 
