@@ -725,7 +725,7 @@ class MainFrame(wx.Frame):  # type: ignore
                 self.m_timer.Stop()
 
                 if self.folder:
-                    matplotlib.use('wxAgg')
+                    matplotlib.use("wxAgg")
                     benchmarker.plot_benchmark_results(self.folder)
 
         event.Skip()
@@ -1342,7 +1342,7 @@ class MainFrame(wx.Frame):  # type: ignore
                     # query = "select id_tests from view_test where path='{}' and md5='{}'".format(
                     #     path, md5
                     # )
-                    query = "select id_tests from view_test where path='{}'".format(path)
+                    query = "select id_tests from view_test where md5='{}'".format(md5)
                     cur.execute(query)
                     ids = ""
                     for row in cur:
