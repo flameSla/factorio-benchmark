@@ -279,14 +279,15 @@ def benchmark_folder(
     print("benchmark maps")
     print("==================")
     print()
-    if filenames is None:
-        if map_regex is None:
+    if filenames:
+        filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
+    if filenames is None or len(filenames) == 0:
+        if map_regex is None or map_regex == "":
             raise Exception("filenames is None AND map_regex is None")
         filenames = glob.glob(os.path.join("saves", map_regex), recursive=True)
 
     # md5 calculation for files
     print("maps:")
-    filenames = [f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)]
     for filename in filenames:
         print(filename)
     print()
