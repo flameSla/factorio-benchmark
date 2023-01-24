@@ -1,4 +1,4 @@
-# Содержание
+# Contents
 1. [Install](#Install)
 2. [Usage](#Usage)
    1. [Installation benchmark_GUI.py](#Installation-benchmark_GUI)
