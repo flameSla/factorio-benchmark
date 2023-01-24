@@ -1,12 +1,12 @@
 # Содержание
 1. [Install](#Install)
 2. [Usage](#Usage)
-   1. [Installation benchmark_GUI.py](#Installation-benchmark_GUI.py)
+   1. [Installation benchmark_GUI.py](#Installation-benchmark_GUI)
       1. [Linux](#Linux)
       2. [Windows](#Windows)
    2. [Running benchmarks](#Running-benchmarks)
    3. [Edit the file list](#Edit-the-file-list)
-3. [Options for the console script 'benchmarker.py'](#Options-for-the-console-script-`benchmarker.py`)
+3. [Options for the console script 'benchmarker.py'](#Options-for-the-console-script-benchmarker.py)
 
 
 This repository should serve the testing of different factorio optimisations problems.
@@ -60,7 +60,8 @@ Options:
    * **0** -> **factorio** - uses all cores
    * **2,4,0** -> 3 benchmarks will be made: 2 core limit, 4 core limit and no core limit
 
-## Installation benchmark_GUI.py 
+## Installation benchmark_GUI
+
 ### Linux
 * install docker
 * unpack the source codes into the "/home/User-Name/factorio-benchmark-benchmark_GUI" folder 
@@ -91,7 +92,7 @@ https://user-images.githubusercontent.com/39356103/213627628-9ba1eca0-08b1-4f00-
 https://user-images.githubusercontent.com/39356103/213622962-987fc33c-5c08-41c1-a609-06984097c3cf.mp4
 
 
-# Options for the console script `benchmarker.py`:
+# Options for the console script benchmarker.py
 ```
   -h, --help            show this help message and exit
   -u, --update          Update Factorio to the latest version before running benchmarks (Linux only).
