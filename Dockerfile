@@ -8,4 +8,6 @@ RUN apt update && apt install -y python3 \
 		&& pip3 install requests \
 		&& pip3 install psutil \
 		&& pip3 install wxPython
+WORKDIR /bench/
+CMD ["xauth", "merge", "//dot.Xauthority"]
 ENV DISPLAY=:0

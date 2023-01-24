@@ -66,7 +66,6 @@ Options:
 * install docker
 * unpack the source codes into the "/home/User-Name/factorio-benchmark-benchmark_GUI" folder 
 * `docker build . -t benchmark_gui`
-* `chmod u+x benchmark_GUI`
 * 
 ```
 docker run --rm --net host \
@@ -75,7 +74,7 @@ docker run --rm --net host \
    -v /home/User-Name/factorio-benchmark-benchmark_GUI/:/bench \
    -u 1000:1000 \
    benchmark_gui \
-   ./bench/benchmark_GUI
+   python3 benchmark_GUI.py
 ```
 
 ### Windows
