@@ -50,15 +50,33 @@ Options:
    * **0** -> **factorio** - uses all cores
    * **2,4,0** -> 3 benchmarks will be made: 2 core limit, 4 core limit and no core limit
 
-Installation benchmark_GUI.py <p align="center">**Attention! Only for Windows!. Packages on Linux cannot be installed like this!**</p>
+#### Installation benchmark_GUI.py 
+##### Linux
+* install docker
+* unpack the source codes into the "/home/User-Name/factorio-benchmark-benchmark_GUI" folder 
+* `docker build . -t benchmark_gui`
+* `chmod u+x benchmark_GUI`
+* 
+```
+docker run --rm --net host \
+   -v /tmp/.X11-unix/:/tmp/.X11-unix/ \
+   -v /home/User-Name/.Xauthority:/dot.Xauthority \
+   -v /home/User-Name/factorio-benchmark-benchmark_GUI/:/bench \
+   -u 1000:1000 \
+   benchmark_gui \
+   ./bench/benchmark_GUI
+```
+
+##### Windows
+**Attention! Only for Windows!. Packages on Linux cannot be installed like this!**
 
 https://user-images.githubusercontent.com/39356103/213622874-71d4215a-5dd5-4323-97f3-6549b7fea55b.mp4
 
-Running benchmarks
+#### Running benchmarks
 
 https://user-images.githubusercontent.com/39356103/213627628-9ba1eca0-08b1-4f00-9d2d-95d41c1ac24c.mp4
 
-Edit the file list
+#### Edit the file list
 
 https://user-images.githubusercontent.com/39356103/213622962-987fc33c-5c08-41c1-a609-06984097c3cf.mp4
 
