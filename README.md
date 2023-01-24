@@ -1,3 +1,14 @@
+# Содержание
+1. [Install](#Install)
+2. [Usage](#Usage)
+   1. [Installation benchmark_GUI.py](#Installation-benchmark_GUI.py)
+      1. [Linux](#Linux)
+      2. [Windows](#Windows)
+   2. [Running benchmarks](#Running-benchmarks)
+   3. [Edit the file list](#Edit-the-file-list)
+3. [Options for the console script 'benchmarker.py'](#Options-for-the-console-script-`benchmarker.py`)
+
+
 This repository should serve the testing of different factorio optimisations problems.
 The goal is, to be able to test different maps quickly and be able to compare the results over time.
 
@@ -36,7 +47,6 @@ When running it for the first time, or when updating factorio use the -u mode to
 
 If you only want to run part of the testsuite you can use the -r \<regex> option to only match certain files.
 
-## Running benchmarks
 To start the program, run `python.exe benchmark_GUI.py`.
 The benchmark results are stored in the database **benchmark_result.db3** (sqlite).
 
@@ -50,8 +60,8 @@ Options:
    * **0** -> **factorio** - uses all cores
    * **2,4,0** -> 3 benchmarks will be made: 2 core limit, 4 core limit and no core limit
 
-### Installation benchmark_GUI.py 
-#### Linux
+## Installation benchmark_GUI.py 
+### Linux
 * install docker
 * unpack the source codes into the "/home/User-Name/factorio-benchmark-benchmark_GUI" folder 
 * `docker build . -t benchmark_gui`
@@ -67,16 +77,16 @@ docker run --rm --net host \
    ./bench/benchmark_GUI
 ```
 
-#### Windows
+### Windows
 **Attention! Only for Windows!. Packages on Linux cannot be installed like this!**
 
 https://user-images.githubusercontent.com/39356103/213622874-71d4215a-5dd5-4323-97f3-6549b7fea55b.mp4
 
-### Running benchmarks
+## Running benchmarks
 
 https://user-images.githubusercontent.com/39356103/213627628-9ba1eca0-08b1-4f00-9d2d-95d41c1ac24c.mp4
 
-### Edit the file list
+## Edit the file list
 
 https://user-images.githubusercontent.com/39356103/213622962-987fc33c-5c08-41c1-a609-06984097c3cf.mp4
 
