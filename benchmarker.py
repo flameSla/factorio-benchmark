@@ -285,8 +285,8 @@ def benchmark_folder(
             filenames = [
                 f for f in filenames if os.path.splitext(f)[1] == ".zip" and os.path.isfile(f)
             ]
-        if filenames is None or len(filenames) == 0:
-            if map_regex is None or map_regex == "":
+        if not filenames:
+            if not map_regex:
                 raise Exception("filenames is None AND map_regex is None")
             filenames = glob.glob(map_regex, recursive=True)
             map_regex = ""
