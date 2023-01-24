@@ -6,7 +6,7 @@
       2. [Windows](#Windows)
    2. [Running benchmarks](#Running-benchmarks)
    3. [Edit the file list](#Edit-the-file-list)
-3. [Options for the console script 'benchmarker.py'](#Options-for-the-console-script-benchmarker.py)
+3. [Options for the console script](#Options-for-the-console-script)
 
 
 This repository should serve the testing of different factorio optimisations problems.
@@ -92,7 +92,9 @@ https://user-images.githubusercontent.com/39356103/213627628-9ba1eca0-08b1-4f00-
 https://user-images.githubusercontent.com/39356103/213622962-987fc33c-5c08-41c1-a609-06984097c3cf.mp4
 
 
-# Options for the console script benchmarker.py
+# Options for the console script
+
+benchmarker.py:
 ```
   -h, --help            show this help message and exit
   -u, --update          Update Factorio to the latest version before running benchmarks (Linux only).
