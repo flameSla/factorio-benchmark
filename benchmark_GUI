@@ -1,0 +1,4 @@
+#!/bin/bash
+xauth merge "/dot.Xauthority"
+cd /bench/
+python3 benchmark_GUI.py
