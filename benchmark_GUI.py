@@ -885,6 +885,8 @@ class MainFrame(wx.Frame):  # type: ignore
                 args_str["factorio_bin"] = "r'{}'".format(args["factorio_bin"])
             script += test_run_script_2.format_map(args_str) + "\n"
             filename = saveFileDialog.GetPath()
+            if os.path.exists(filename):
+                shutil.move(filename, filename + '.bak')
             with open(filename, "w") as f:
                 print(script, file=f)
 
